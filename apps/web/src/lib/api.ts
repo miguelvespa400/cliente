@@ -22,12 +22,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
       localStorage.removeItem("prospex_user");
       window.location.href = "/login";
     }
-    throw new Error("Unauthorized");
+    throw new Error("Não autorizado");
   }
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Request failed" }));
-    throw new Error(error.message || `HTTP ${res.status}`);
+    const error = await res.json().catch(() => ({ message: "Falha na requisição" }));
+    throw new Error(error.message || `Falha na requisição (HTTP ${res.status})`);
   }
   return res.json();
 }
@@ -52,7 +52,7 @@ export const api = {
       window.location.href = "/login";
       return;
     }
-    if (!res.ok) throw new Error(`Download failed: HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`Falha no download: HTTP ${res.status}`);
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

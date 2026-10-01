@@ -10,6 +10,7 @@ import {
   PieChart, Pie, Cell,
 } from "recharts";
 import { api } from "@/lib/api";
+import { CRM_STATUS_LABELS, labelFor } from "@/lib/labels";
 
 interface Overview {
   totalLeads: number;
@@ -60,7 +61,7 @@ export function AnalyticsDashboard() {
   }, []);
 
   const funnelData = (overview?.crmPipeline ?? []).map((item) => ({
-    name: item.status.charAt(0).toUpperCase() + item.status.slice(1),
+    name: labelFor(CRM_STATUS_LABELS, item.status),
     value: item.count,
     color: CRM_COLORS[item.status] ?? "#94a3b8",
   }));
@@ -104,10 +105,10 @@ export function AnalyticsDashboard() {
   }
 
   const stats = [
-    { label: "Total Leads", value: overview?.totalLeads.toLocaleString() ?? "0" },
-    { label: "Conversion Rate", value: overview?.conversionRate ?? "0%" },
-    { label: "Deals Won", value: overview?.dealsWon.toString() ?? "0" },
-    { label: "Active Campaigns", value: overview?.activeCampaigns.toString() ?? "0" },
+    { label: "Total de leads", value: overview?.totalLeads.toLocaleString("pt-BR") ?? "0" },
+    { label: "Taxa de conversão", value: overview?.conversionRate ?? "0%" },
+    { label: "Negócios ganhos", value: overview?.dealsWon.toString() ?? "0" },
+    { label: "Campanhas ativas", value: overview?.activeCampaigns.toString() ?? "0" },
   ];
 
   return (
@@ -133,12 +134,12 @@ export function AnalyticsDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Leads by Industry</CardTitle>
+            <CardTitle className="text-base">Leads por segmento</CardTitle>
           </CardHeader>
           <CardContent>
             {industryData.length === 0 ? (
               <div className="h-[240px] flex items-center justify-center text-sm text-muted-foreground">
-                No industry data yet — create a campaign to start
+                Ainda não há dados por segmento — crie uma campanha para começar
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
@@ -154,8 +155,8 @@ export function AnalyticsDashboard() {
                       fontSize: "12px",
                     }}
                   />
-                  <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Total Leads" />
-                  <Bar dataKey="avgScore" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} name="Avg Score" />
+                  <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Total de leads" />
+                  <Bar dataKey="avgScore" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} name="Pontuação média" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -164,12 +165,12 @@ export function AnalyticsDashboard() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">CRM Funnel</CardTitle>
+            <CardTitle className="text-base">Funil do CRM</CardTitle>
           </CardHeader>
           <CardContent>
             {funnelData.length === 0 ? (
               <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground text-center">
-                No leads yet
+                Nenhum lead ainda
               </div>
             ) : (
               <>
@@ -209,10 +210,10 @@ export function AnalyticsDashboard() {
         <Card className="border-dashed">
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground text-sm">
-              Analytics data will appear here once you run your first campaign.
+              Os dados de análise aparecerão aqui assim que você executar sua primeira campanha.
             </p>
             <Badge variant="secondary" className="mt-3">
-              Go to Campaigns → New Campaign to get started
+              Vá em Campanhas → Nova campanha para começar
             </Badge>
           </CardContent>
         </Card>

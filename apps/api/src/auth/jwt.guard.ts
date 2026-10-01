@@ -12,7 +12,7 @@ export class JwtGuard implements CanActivate {
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const req = ctx.switchToHttp().getRequest();
     const authHeader: string | undefined = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) throw new UnauthorizedException("Missing token");
+    if (!authHeader?.startsWith("Bearer ")) throw new UnauthorizedException("Sessão não encontrada. Faça login novamente");
 
     const token = authHeader.slice(7);
     try {
@@ -20,7 +20,7 @@ export class JwtGuard implements CanActivate {
         secret: this.config.get<string>("JWT_SECRET"),
       });
     } catch {
-      throw new UnauthorizedException("Invalid or expired token");
+      throw new UnauthorizedException("Sessão inválida ou expirada");
     }
     return true;
   }

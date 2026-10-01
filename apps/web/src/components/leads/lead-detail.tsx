@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Phone, Globe, MapPin, Star, Mail, MessageCircle, Loader2, Copy, Instagram } from "lucide-react";
 import { useLead } from "@/hooks/use-leads";
 import { api } from "@/lib/api";
+import { ACTIVITY_TYPE_LABELS, INDUSTRY_LABELS, labelFor } from "@/lib/labels";
 
 const container = {
   hidden: { opacity: 0 },
@@ -79,7 +80,7 @@ export function LeadDetail({ id }: { id: string }) {
     );
   }
   if (!lead) {
-    return <div className="text-center py-20 text-muted-foreground">Lead not found</div>;
+    return <div className="text-center py-20 text-muted-foreground">Lead não encontrado</div>;
   }
 
   return (
@@ -96,14 +97,14 @@ export function LeadDetail({ id }: { id: string }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold">{lead.name}</h1>
-            {lead.priority === "HIGH" && <Badge variant="success">High Priority</Badge>}
-            {lead.hasWebsite && <Badge variant="info">Has Website</Badge>}
+            {lead.priority === "HIGH" && <Badge variant="success">Alta prioridade</Badge>}
+            {lead.hasWebsite && <Badge variant="info">Tem site</Badge>}
           </div>
-          <p className="text-sm text-muted-foreground">{lead.industry} · {lead.address}</p>
+          <p className="text-sm text-muted-foreground">{[lead.category || labelFor(INDUSTRY_LABELS, lead.industry), lead.address].filter(Boolean).join(" · ")}</p>
         </div>
         <div className="text-right flex-shrink-0">
           <div className="text-2xl font-bold text-primary">{lead.score}</div>
-          <div className="text-xs text-muted-foreground">AI Score</div>
+          <div className="text-xs text-muted-foreground">Pontuação IA</div>
         </div>
       </motion.div>
 
@@ -112,14 +113,15 @@ export function LeadDetail({ id }: { id: string }) {
           {/* Contact Info */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Contact Info</CardTitle>
+              <CardTitle className="text-base">Informações de contato</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {[
-                { icon: Phone, label: "Phone", value: lead.phone },
-                { icon: Globe, label: "Website", value: lead.website },
-                { icon: MapPin, label: "Address", value: lead.address },
-                { icon: Star, label: "Rating", value: lead.rating ? `${lead.rating} stars on Google Maps` : undefined },
+                { icon: Phone, label: "Telefone", value: lead.phone },
+                { icon: Mail, label: "E-mail", value: lead.email ?? undefined },
+                { icon: Globe, label: "Site", value: lead.website },
+                { icon: MapPin, label: "Endereço", value: lead.address },
+                { icon: Star, label: "Avaliação", value: lead.rating ? `${lead.rating} estrelas no Google Maps` : undefined },
               ]
                 .filter((i) => i.value)
                 .map((item) => (
@@ -131,6 +133,7 @@ export function LeadDetail({ id }: { id: string }) {
                       size="icon"
                       className="h-7 w-7 opacity-40 hover:opacity-100 flex-shrink-0"
                       onClick={() => navigator.clipboard.writeText(item.value!)}
+                      aria-label={`Copiar ${item.label.toLowerCase()}`}
                     >
                       <Copy className="w-3 h-3" />
                     </Button>
@@ -143,20 +146,20 @@ export function LeadDetail({ id }: { id: string }) {
           {lead.marketingContent && (
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">AI-Generated Outreach</CardTitle>
+                <CardTitle className="text-base">Abordagem gerada por IA</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {lead.marketingContent.email && (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Mail className="w-4 h-4 text-info" />
-                      <span className="text-sm font-medium">Email</span>
+                      <span className="text-sm font-medium">E-mail</span>
                       <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs opacity-60 hover:opacity-100" onClick={() => navigator.clipboard.writeText(lead.marketingContent!.email!.body)}>
-                        Copy
+                        Copiar
                       </Button>
                     </div>
                     <div className="bg-muted/50 rounded-lg p-3 text-xs leading-relaxed">
-                      <p className="font-medium text-muted-foreground mb-1.5">Subject: {lead.marketingContent.email.subject}</p>
+                      <p className="font-medium text-muted-foreground mb-1.5">Assunto: {lead.marketingContent.email.subject}</p>
                       <p className="whitespace-pre-wrap">{lead.marketingContent.email.body}</p>
                     </div>
                   </div>
@@ -169,7 +172,7 @@ export function LeadDetail({ id }: { id: string }) {
                         <MessageCircle className="w-4 h-4 text-success" />
                         <span className="text-sm font-medium">WhatsApp</span>
                         <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs opacity-60 hover:opacity-100" onClick={() => navigator.clipboard.writeText(lead.marketingContent!.whatsapp!)}>
-                          Copy
+                          Copiar
                         </Button>
                       </div>
                       <div className="bg-muted/50 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap">
@@ -184,7 +187,7 @@ export function LeadDetail({ id }: { id: string }) {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <Instagram className="w-4 h-4 text-pink-500" />
-                        <span className="text-sm font-medium">Instagram DM</span>
+                        <span className="text-sm font-medium">Direct do Instagram</span>
                       </div>
                       <div className="bg-muted/50 rounded-lg p-3 text-xs leading-relaxed">
                         {lead.marketingContent.instagram}
@@ -201,7 +204,7 @@ export function LeadDetail({ id }: { id: string }) {
         <motion.div variants={item} className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">CRM Status</CardTitle>
+              <CardTitle className="text-base">Status no CRM</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Select
@@ -212,13 +215,13 @@ export function LeadDetail({ id }: { id: string }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="new">🔵 New</SelectItem>
-                  <SelectItem value="contacted">📤 Contacted</SelectItem>
-                  <SelectItem value="replied">💬 Replied</SelectItem>
-                  <SelectItem value="meeting">📅 Meeting</SelectItem>
-                  <SelectItem value="proposal">📄 Proposal</SelectItem>
-                  <SelectItem value="won">✅ Won</SelectItem>
-                  <SelectItem value="lost">❌ Lost</SelectItem>
+                  <SelectItem value="new">🔵 Novo</SelectItem>
+                  <SelectItem value="contacted">📤 Contatado</SelectItem>
+                  <SelectItem value="replied">💬 Respondeu</SelectItem>
+                  <SelectItem value="meeting">📅 Reunião</SelectItem>
+                  <SelectItem value="proposal">📄 Proposta</SelectItem>
+                  <SelectItem value="won">✅ Ganho</SelectItem>
+                  <SelectItem value="lost">❌ Perdido</SelectItem>
                 </SelectContent>
               </Select>
               <Button
@@ -227,25 +230,25 @@ export function LeadDetail({ id }: { id: string }) {
                 onClick={handleCrmUpdate}
                 disabled={saving || !crmStatus}
               >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Update Status"}
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Atualizar status"}
               </Button>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Activity Log</CardTitle>
+              <CardTitle className="text-base">Histórico de atividades</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {(lead.activities || []).map((a) => (
                   <div key={a.id} className="text-xs border-l-2 border-primary/30 pl-3">
-                    <p className="font-medium capitalize text-muted-foreground">{a.type}</p>
+                    <p className="font-medium capitalize text-muted-foreground">{labelFor(ACTIVITY_TYPE_LABELS, a.type)}</p>
                     <p className="mt-0.5">{a.note}</p>
                   </div>
                 ))}
                 {(!lead.activities || lead.activities.length === 0) && (
-                  <p className="text-sm text-muted-foreground text-center py-4">No activity yet</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">Nenhuma atividade ainda</p>
                 )}
               </div>
             </CardContent>

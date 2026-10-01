@@ -4,13 +4,13 @@ test.describe("Leads", () => {
   test("leads list page loads", async ({ authedPage: page }) => {
     await page.goto("/leads");
     await expect(page.getByRole("heading", { name: /leads/i })).toBeVisible();
-    await expect(page.getByPlaceholder("Search leads...")).toBeVisible();
+    await expect(page.getByPlaceholder("Buscar leads...")).toBeVisible();
   });
 
   test("search filter narrows results", async ({ authedPage: page }) => {
     await page.goto("/leads");
 
-    const searchInput = page.getByPlaceholder("Search leads...");
+    const searchInput = page.getByPlaceholder("Buscar leads...");
     // Search for something that will not match anything
     await searchInput.fill("__no_match_xyz_12345__");
     // Table should show empty state or 0 rows
@@ -26,8 +26,8 @@ test.describe("Leads", () => {
     await page.goto("/leads");
 
     // Click priority filter
-    await page.locator('button:has-text("All priorities"), [placeholder="Priority"]').first().click();
-    await page.locator('[role="option"]:has-text("High")').click();
+    await page.locator('button:has-text("Todas as prioridades"), [placeholder="Prioridade"]').first().click();
+    await page.locator('[role="option"]:has-text("Alta")').click();
 
     // URL or UI state changed — just verify no crash
     await expect(page.locator("body")).toBeVisible();
@@ -60,17 +60,17 @@ test.describe("Leads", () => {
     await page.waitForURL(/\/leads\/[a-z0-9-]+$/);
 
     // Find CRM status select/button and change it
-    const crmSelect = page.locator('[id="crm-status"], button:has-text("New"), button:has-text("Contacted")').first();
+    const crmSelect = page.locator('[id="crm-status"], button:has-text("Novo"), button:has-text("Contatado")').first();
     if (await crmSelect.isVisible()) {
       await crmSelect.click();
-      await page.locator('[role="option"]:has-text("Contacted")').click();
+      await page.locator('[role="option"]:has-text("Contatado")').click();
 
       // Update button
-      const updateBtn = page.locator('button:has-text("Update CRM")');
+      const updateBtn = page.locator('button:has-text("Atualizar status")');
       if (await updateBtn.isVisible()) {
         await updateBtn.click();
         // Should not show error
-        await expect(page.locator("text=error").or(page.locator(".text-red-400"))).not.toBeVisible({ timeout: 3000 });
+        await expect(page.locator("text=erro").or(page.locator(".text-red-400"))).not.toBeVisible({ timeout: 3000 });
       }
     }
   });

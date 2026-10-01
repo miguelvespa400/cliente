@@ -18,6 +18,7 @@ import { Plus, Search, Megaphone, MapPin, Users, Star, MoreHorizontal, Loader2, 
 import { useCampaigns, type Campaign } from "@/hooks/use-campaigns";
 import { formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { CAMPAIGN_STATUS_LABELS, INDUSTRY_LABELS, labelFor } from "@/lib/labels";
 
 const container = {
   hidden: { opacity: 0 },
@@ -35,10 +36,10 @@ function StatusBadge({ campaign }: { campaign: Campaign }) {
       <span className="text-xs text-info font-medium">{campaign.progress}%</span>
     </div>
   );
-  if (campaign.status === "completed") return <Badge variant="success">Completed</Badge>;
-  if (campaign.status === "failed") return <Badge variant="destructive">Failed</Badge>;
-  if (campaign.status === "draft") return <Badge variant="secondary">Draft</Badge>;
-  return <Badge variant="outline">{campaign.status}</Badge>;
+  if (campaign.status === "completed") return <Badge variant="success">Concluída</Badge>;
+  if (campaign.status === "failed") return <Badge variant="destructive">Falhou</Badge>;
+  if (campaign.status === "draft") return <Badge variant="secondary">Rascunho</Badge>;
+  return <Badge variant="outline">{labelFor(CAMPAIGN_STATUS_LABELS, campaign.status)}</Badge>;
 }
 
 export function CampaignsList() {
@@ -49,6 +50,7 @@ export function CampaignsList() {
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.industry.toLowerCase().includes(search.toLowerCase()) ||
+      labelFor(INDUSTRY_LABELS, c.industry).toLowerCase().includes(search.toLowerCase()) ||
       c.location.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -57,10 +59,10 @@ export function CampaignsList() {
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search campaigns..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
+          <Input placeholder="Buscar campanhas..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
         </div>
         <Button asChild variant="gradient" className="ml-auto">
-          <Link href="/campaigns/new"><Plus className="mr-2 h-4 w-4" />New Campaign</Link>
+          <Link href="/campaigns/new"><Plus className="mr-2 h-4 w-4" />Nova campanha</Link>
         </Button>
       </div>
 
@@ -84,10 +86,10 @@ export function CampaignsList() {
         <Card>
           <CardContent className="py-16 text-center">
             <Megaphone className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-50" />
-            <p className="font-medium">No campaigns found</p>
-            <p className="text-sm text-muted-foreground mb-4">Create your first campaign to start finding leads</p>
+            <p className="font-medium">Nenhuma campanha encontrada</p>
+            <p className="text-sm text-muted-foreground mb-4">Crie sua primeira campanha para começar a encontrar leads</p>
             <Button asChild variant="gradient">
-              <Link href="/campaigns/new"><Plus className="mr-2 h-4 w-4" />New Campaign</Link>
+              <Link href="/campaigns/new"><Plus className="mr-2 h-4 w-4" />Nova campanha</Link>
             </Button>
           </CardContent>
         </Card>
@@ -107,7 +109,7 @@ export function CampaignsList() {
                         <StatusBadge campaign={c} />
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1 capitalize"><Megaphone className="w-3 h-3" />{c.industry}</span>
+                        <span className="flex items-center gap-1"><Megaphone className="w-3 h-3" />{labelFor(INDUSTRY_LABELS, c.industry)}</span>
                         <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{c.location}</span>
                         <span className="hidden sm:block">{formatDate(c.createdAt)}</span>
                       </div>
@@ -122,7 +124,7 @@ export function CampaignsList() {
                       </div>
                       <div className="hidden sm:block">
                         <div className="flex items-center gap-1 justify-center"><Star className="w-3 h-3 text-warning" /><span className="text-sm font-semibold">{c.priorityLeads}</span></div>
-                        <p className="text-xs text-muted-foreground">Priority</p>
+                        <p className="text-xs text-muted-foreground">Prioritários</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -134,10 +136,10 @@ export function CampaignsList() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link href={`/campaigns/${c.id}`}><Eye className="w-3.5 h-3.5 mr-1" />View details</Link>
+                            <Link href={`/campaigns/${c.id}`}><Eye className="w-3.5 h-3.5 mr-1" />Ver detalhes</Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => api.download(`/export/leads/csv?campaignId=${c.id}`, `leads-${c.id}.csv`)}>
-                            <Download className="w-3.5 h-3.5 mr-1" />Export leads (CSV)
+                            <Download className="w-3.5 h-3.5 mr-1" />Exportar leads (CSV)
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

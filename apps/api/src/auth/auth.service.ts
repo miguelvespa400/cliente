@@ -14,7 +14,7 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (existing) throw new ConflictException("Email already registered");
+    if (existing) throw new ConflictException("Este e-mail já está cadastrado");
 
     const hashed = await bcrypt.hash(dto.password, 12);
     const slug = dto.workspaceName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -66,11 +66,11 @@ export class AuthService {
     });
 
     if (!user || !user.accounts[0]?.password) {
-      throw new UnauthorizedException("Invalid email or password");
+      throw new UnauthorizedException("E-mail ou senha inválidos");
     }
 
     const valid = await bcrypt.compare(dto.password, user.accounts[0].password);
-    if (!valid) throw new UnauthorizedException("Invalid email or password");
+    if (!valid) throw new UnauthorizedException("E-mail ou senha inválidos");
 
     const workspace = user.memberships[0]?.workspace;
     const token = this.jwt.sign({

@@ -12,6 +12,14 @@
   [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](https://docs.docker.com/compose/)
 </div>
 
+> ## 🇧🇷 Sobre este repositório (Netwish)
+>
+> Versão do **Prospex** adaptada pela Netwish: interface do painel, mensagens de erro, exportação CSV e conteúdo gerado por IA **traduzidos para português (pt-BR)**, com idioma padrão das campanhas em português.
+>
+> - **Site de apresentação (GitHub Pages):** veja o link em *About* → *Website*, ao lado deste repositório.
+> - **Painel completo** (busca de leads no Google Maps, pontuação com IA, mensagens prontas e CRM): precisa de API + PostgreSQL + Redis, então **não roda no GitHub Pages**. Para rodar localmente, siga o *Quick Start* abaixo.
+> - Projeto original: [asiifdev/business-leads-ai-automation](https://github.com/asiifdev/business-leads-ai-automation), licença MIT.
+
 ## What is Prospex?
 
 Prospex is a **self-hosted, open-source** platform that combines lead discovery, AI-powered outreach generation, and CRM management in one dashboard.

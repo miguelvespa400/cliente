@@ -13,17 +13,17 @@ import { Loader2, Plus, X } from "lucide-react";
 import { motion } from "framer-motion";
 
 const INDUSTRIES = [
-  { value: "restaurant", label: "Restaurant & F&B" },
-  { value: "cafe", label: "Cafe & Coffee" },
-  { value: "retail", label: "Retail & Fashion" },
-  { value: "automotive", label: "Automotive" },
-  { value: "healthcare", label: "Healthcare & Clinic" },
-  { value: "beauty", label: "Beauty & Wellness" },
-  { value: "education", label: "Education & Course" },
-  { value: "realestate", label: "Real Estate" },
-  { value: "event", label: "Event & Wedding" },
-  { value: "tech", label: "Technology" },
-  { value: "professional", label: "Professional Services" },
+  { value: "restaurant", label: "Restaurantes e alimentação" },
+  { value: "cafe", label: "Cafeterias" },
+  { value: "retail", label: "Varejo e moda" },
+  { value: "automotive", label: "Automotivo" },
+  { value: "healthcare", label: "Saúde e clínicas" },
+  { value: "beauty", label: "Beleza e bem-estar" },
+  { value: "education", label: "Educação e cursos" },
+  { value: "realestate", label: "Imobiliário" },
+  { value: "event", label: "Eventos e casamentos" },
+  { value: "tech", label: "Tecnologia" },
+  { value: "professional", label: "Serviços profissionais" },
 ];
 
 export function CreateCampaignForm() {
@@ -37,7 +37,7 @@ export function CreateCampaignForm() {
     yourService: "",
     maxResults: "20",
     contentStyle: "balanced",
-    language: "indonesian",
+    language: "portuguese",
   });
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -79,19 +79,19 @@ export function CreateCampaignForm() {
     >
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Campaign Details</CardTitle>
+          <CardTitle className="text-base">Detalhes da campanha</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="name">Campaign Name</Label>
-            <Input id="name" placeholder="e.g. Restaurant Bandung Q2 2026" value={form.name} onChange={set("name")} required />
+            <Label htmlFor="name">Nome da campanha</Label>
+            <Input id="name" placeholder="ex.: Dentistas Curitiba 2º tri 2026" value={form.name} onChange={set("name")} required />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Industry</Label>
+              <Label>Segmento</Label>
               <Select value={form.industry} onValueChange={(v) => setForm((p) => ({ ...p, industry: v }))}>
-                <SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecione o segmento" /></SelectTrigger>
                 <SelectContent>
                   {INDUSTRIES.map((i) => (
                     <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>
@@ -100,16 +100,16 @@ export function CreateCampaignForm() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" placeholder="e.g. Bandung, Jakarta" value={form.location} onChange={set("location")} required />
+              <Label htmlFor="location">Localização</Label>
+              <Input id="location" placeholder="ex.: Curitiba, PR" value={form.location} onChange={set("location")} required />
             </div>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Search Queries</Label>
+              <Label>Termos de busca</Label>
               <Badge variant="secondary" className="text-xs">
-                {queries.length} {queries.length === 1 ? "query" : "queries"}
+                {queries.length} {queries.length === 1 ? "termo" : "termos"}
               </Badge>
             </div>
             <div className="space-y-2">
@@ -117,7 +117,7 @@ export function CreateCampaignForm() {
                 <div key={i} className="flex gap-2">
                   <Input
                     data-testid="query-input"
-                    placeholder={`e.g. ${form.industry || "restaurant"} ${form.location || "Jakarta"}`}
+                    placeholder={`ex.: dentistas ${form.location || "Curitiba"}`}
                     value={q}
                     onChange={(e) => updateQuery(i, e.target.value)}
                     required
@@ -131,15 +131,15 @@ export function CreateCampaignForm() {
               ))}
             </div>
             <Button type="button" variant="outline" size="sm" onClick={addQuery} className="text-xs mt-1">
-              <Plus className="w-3 h-3 mr-1" />Add search query
+              <Plus className="w-3 h-3 mr-1" />Adicionar termo de busca
             </Button>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="service">Your Service / Product</Label>
+            <Label htmlFor="service">Seu serviço / produto</Label>
             <Textarea
               id="service"
-              placeholder="Describe what you're offering to these leads..."
+              placeholder="Descreva o que você oferece a esses leads (ex.: criação de sites)..."
               value={form.yourService}
               onChange={set("yourService")}
               className="resize-none"
@@ -150,7 +150,7 @@ export function CreateCampaignForm() {
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Max Results</Label>
+              <Label>Máximo de resultados</Label>
               <Select value={form.maxResults} onValueChange={(v) => setForm((p) => ({ ...p, maxResults: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -161,36 +161,37 @@ export function CreateCampaignForm() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Content Style</Label>
+              <Label>Tom do conteúdo</Label>
               <Select value={form.contentStyle} onValueChange={(v) => setForm((p) => ({ ...p, contentStyle: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="professional">Professional</SelectItem>
-                  <SelectItem value="friendly">Friendly</SelectItem>
-                  <SelectItem value="balanced">Balanced</SelectItem>
-                  <SelectItem value="casual">Casual</SelectItem>
+                  <SelectItem value="professional">Profissional</SelectItem>
+                  <SelectItem value="friendly">Amigável</SelectItem>
+                  <SelectItem value="balanced">Equilibrado</SelectItem>
+                  <SelectItem value="casual">Descontraído</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Language</Label>
+              <Label>Idioma</Label>
               <Select value={form.language} onValueChange={(v) => setForm((p) => ({ ...p, language: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="indonesian">Indonesian</SelectItem>
-                  <SelectItem value="english">English</SelectItem>
+                  <SelectItem value="portuguese">Português</SelectItem>
+                  <SelectItem value="english">Inglês</SelectItem>
+                  <SelectItem value="spanish">Espanhol</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         </CardContent>
         <CardFooter className="gap-3">
-          <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>
           <Button type="submit" variant="gradient" className="flex-1" disabled={loading}>
             {loading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Starting campaign...</>
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Iniciando campanha...</>
             ) : (
-              "Start Campaign"
+              "Iniciar campanha"
             )}
           </Button>
         </CardFooter>

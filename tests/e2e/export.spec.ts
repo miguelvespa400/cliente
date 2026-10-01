@@ -7,7 +7,7 @@ test.describe("Export", () => {
     // Listen for download event
     const downloadPromise = page.waitForEvent("download", { timeout: 10000 }).catch(() => null);
 
-    const exportBtn = page.locator('button:has-text("Export CSV")');
+    const exportBtn = page.locator('button:has-text("Exportar CSV")');
     await expect(exportBtn).toBeVisible({ timeout: 5000 });
     await exportBtn.click();
 
@@ -17,13 +17,13 @@ test.describe("Export", () => {
       expect(download.suggestedFilename()).toMatch(/\.csv$/);
     }
     // No error on page
-    await expect(page.locator("text=Unauthorized")).not.toBeVisible();
+    await expect(page.locator("text=Não autorizado")).not.toBeVisible();
   });
 
   test("export CSV from campaign detail triggers download", async ({ authedPage: page }) => {
     await page.goto("/campaigns");
 
-    // Excludes the ever-present "New Campaign" button, whose href
+    // Excludes the ever-present "Nova campanha" button, whose href
     // ("/campaigns/new") would otherwise match first.
     const firstLink = page.locator("a[href^='/campaigns/']:not([href='/campaigns/new'])").first();
     const hasCampaigns = await firstLink.isVisible({ timeout: 5000 }).catch(() => false);
@@ -42,13 +42,13 @@ test.describe("Export", () => {
     if (download) {
       expect(download.suggestedFilename()).toMatch(/\.csv$/);
     }
-    await expect(page.locator("text=Unauthorized")).not.toBeVisible();
+    await expect(page.locator("text=Não autorizado")).not.toBeVisible();
   });
 
   test("export JSON from campaign detail triggers download", async ({ authedPage: page }) => {
     await page.goto("/campaigns");
 
-    // Excludes the ever-present "New Campaign" button, whose href
+    // Excludes the ever-present "Nova campanha" button, whose href
     // ("/campaigns/new") would otherwise match first.
     const firstLink = page.locator("a[href^='/campaigns/']:not([href='/campaigns/new'])").first();
     const hasCampaigns = await firstLink.isVisible({ timeout: 5000 }).catch(() => false);

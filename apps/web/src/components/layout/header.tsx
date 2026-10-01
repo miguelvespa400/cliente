@@ -16,9 +16,9 @@ import { SidebarContent } from "@/components/layout/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const notifications = [
-  { title: "New lead captured", detail: "Acme Corp requested a demo", time: "5m ago" },
-  { title: "Campaign finished", detail: "Q3 Outreach completed sending", time: "1h ago" },
-  { title: "Integration disconnected", detail: "HubSpot needs re-authentication", time: "3h ago" },
+  { title: "Novo lead capturado", detail: "Acme Corp solicitou uma demonstração", time: "há 5 min" },
+  { title: "Campanha concluída", detail: "Abordagem T3 finalizou os envios", time: "há 1 h" },
+  { title: "Integração desconectada", detail: "O HubSpot precisa ser autenticado novamente", time: "há 3 h" },
 ];
 
 export function Header() {
@@ -39,7 +39,7 @@ export function Header() {
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search leads, campaigns..."
+            placeholder="Buscar leads, campanhas..."
             className="pl-8 h-9 bg-muted/50 border-0 text-sm"
           />
         </div>
@@ -55,7 +55,7 @@ export function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuLabel>Notificações</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {notifications.map((n) => (
               <DropdownMenuItem key={n.title} className="flex flex-col items-start gap-0.5 py-2">

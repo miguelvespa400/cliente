@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Github } from "lucide-react";
+import { REPO_URL } from "@/lib/config";
 
 export function Footer() {
   return (
@@ -14,7 +15,7 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-6 text-slate-500 text-xs">
           <Link
-            href="https://github.com/asiifdev/business-leads-ai-automation"
+            href={REPO_URL}
             target="_blank"
             className="hover:text-white transition-colors flex items-center gap-1"
           >

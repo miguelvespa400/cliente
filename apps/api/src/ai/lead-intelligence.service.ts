@@ -40,7 +40,7 @@ export class LeadIntelligenceService {
     const factors: string[] = [];
 
     if (lead.phone) { score += 10; factors.push("Has phone number"); }
-    if (lead.website || lead.hasWebsite) { score += 10; factors.push("Has website"); }
+    if (lead.hasWebsite) { score += 10; factors.push("Has website"); }
     if (lead.address) { score += 5; factors.push("Has address"); }
 
     const rawRating = parseFloat(lead.rating ?? "0");
@@ -81,7 +81,7 @@ export class LeadIntelligenceService {
       }
     }
 
-    if (!lead.hasWebsite && !lead.website) {
+    if (!lead.hasWebsite) {
       score += 5;
       factors.push("No website (digital gap opportunity)");
     }
@@ -98,7 +98,7 @@ export class LeadIntelligenceService {
     return { score, priority, category, factors, recommendation };
   }
 
-  scoreLeads(leads: LeadData[], targetIndustry?: string): Array<LeadData & LeadIntelligence> {
+  scoreLeads<T extends LeadData>(leads: T[], targetIndustry?: string): Array<T & LeadIntelligence> {
     return leads
       .map((lead) => ({ ...lead, ...this.scoreLead(lead, targetIndustry) }))
       .sort((a, b) => b.score - a.score);

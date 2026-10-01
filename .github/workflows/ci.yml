@@ -1,10 +1,8 @@
 name: CI
 
+# Requer runner self-hosted; deixado manual neste fork (sem runner configurado).
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}

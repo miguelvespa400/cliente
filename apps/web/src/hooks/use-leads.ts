@@ -9,6 +9,7 @@ export interface Lead {
   lat?: number | null;
   lng?: number | null;
   phone: string;
+  email?: string | null;
   website: string;
   rating: string;
   reviewCount?: number | null;

@@ -11,7 +11,7 @@ test.describe("Auth", () => {
   test("login with correct credentials redirects to dashboard", async ({ authedPage: page }) => {
     // Log out first
     await page.getByRole("button", { name: TEST_USER.email, exact: false }).click();
-    await page.getByRole("menuitem", { name: "Sign out" }).click();
+    await page.getByRole("menuitem", { name: "Sair" }).click();
     await page.waitForURL("/login");
 
     // Log back in
@@ -26,7 +26,7 @@ test.describe("Auth", () => {
     await page.click('button[type="submit"]');
 
     // Error message should appear, URL should stay on /login
-    await expect(page.locator("text=Invalid credentials").or(page.locator('[class*="text-red"]'))).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("text=E-mail ou senha inválidos").or(page.locator('[class*="text-red"]'))).toBeVisible({ timeout: 5000 });
     await expect(page).toHaveURL("/login");
   });
 
@@ -42,7 +42,7 @@ test.describe("Auth", () => {
 
   test("logout clears session and redirects to /login", async ({ authedPage: page }) => {
     await page.getByRole("button", { name: TEST_USER.email, exact: false }).click();
-    await page.getByRole("menuitem", { name: "Sign out" }).click();
+    await page.getByRole("menuitem", { name: "Sair" }).click();
     await page.waitForURL("/login");
     await expect(page).toHaveURL("/login");
 

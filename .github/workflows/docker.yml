@@ -1,9 +1,8 @@
 name: Docker
 
+# Requer runner self-hosted e registry; deixado manual neste fork.
 on:
-  push:
-    branches: [main]
-    tags: ["v*.*.*"]
+  workflow_dispatch:
 
 concurrency:
   group: docker-${{ github.ref }}

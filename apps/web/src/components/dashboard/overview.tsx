@@ -38,15 +38,15 @@ export function DashboardOverview() {
   }, []);
 
   const stats = [
-    { title: "Total Leads", value: overview?.totalLeads.toLocaleString() ?? "—", icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { title: "Active Campaigns", value: overview?.activeCampaigns.toString() ?? "—", icon: Megaphone, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { title: "Conversion Rate", value: overview?.conversionRate ?? "—", icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { title: "Deals Won", value: overview?.dealsWon.toString() ?? "—", icon: Trophy, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { title: "Total de leads", value: overview?.totalLeads.toLocaleString("pt-BR") ?? "—", icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { title: "Campanhas ativas", value: overview?.activeCampaigns.toString() ?? "—", icon: Megaphone, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { title: "Taxa de conversão", value: overview?.conversionRate ?? "—", icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { title: "Negócios ganhos", value: overview?.dealsWon.toString() ?? "—", icon: Trophy, color: "text-amber-500", bg: "bg-amber-500/10" },
   ];
 
   // Build trend from campaign data (campaigns per week by createdAt)
   const trendData = campaigns.slice(-6).map((c) => ({
-    date: new Date(c.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    date: new Date(c.createdAt).toLocaleDateString("pt-BR", { month: "short", day: "numeric" }),
     leads: c.totalLeads,
     won: c.priorityLeads,
   }));
@@ -55,14 +55,14 @@ export function DashboardOverview() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Good morning 👋</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Olá 👋</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
-            Here&apos;s what&apos;s happening with your leads today.
+            Veja como estão seus leads hoje.
           </p>
         </div>
         <Button asChild variant="gradient">
           <Link href="/campaigns/new">
-            <Plus className="mr-2 h-4 w-4" />New Campaign
+            <Plus className="mr-2 h-4 w-4" />Nova campanha
           </Link>
         </Button>
       </div>
@@ -99,8 +99,8 @@ export function DashboardOverview() {
         <Card className="lg:col-span-3">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Lead Generation Trend</CardTitle>
-              <Badge variant="outline" className="text-xs">Last 6 months</Badge>
+              <CardTitle className="text-base">Evolução da geração de leads</CardTitle>
+              <Badge variant="outline" className="text-xs">Últimas 6 campanhas</Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -127,8 +127,8 @@ export function DashboardOverview() {
                     fontSize: "12px",
                   }}
                 />
-                <Area type="monotone" dataKey="leads" stroke="#8b5cf6" strokeWidth={2} fill="url(#g1)" name="Total Leads" />
-                <Area type="monotone" dataKey="won" stroke="#10b981" strokeWidth={2} fill="url(#g2)" name="Priority Leads" />
+                <Area type="monotone" dataKey="leads" stroke="#8b5cf6" strokeWidth={2} fill="url(#g1)" name="Total de leads" />
+                <Area type="monotone" dataKey="won" stroke="#10b981" strokeWidth={2} fill="url(#g2)" name="Leads prioritários" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -137,9 +137,9 @@ export function DashboardOverview() {
         <Card className="lg:col-span-2">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Recent Campaigns</CardTitle>
+              <CardTitle className="text-base">Campanhas recentes</CardTitle>
               <Button variant="ghost" size="sm" asChild className="text-xs h-7 px-2">
-                <Link href="/campaigns">View all <ArrowRight className="ml-1 w-3 h-3" /></Link>
+                <Link href="/campaigns">Ver todas <ArrowRight className="ml-1 w-3 h-3" /></Link>
               </Button>
             </div>
           </CardHeader>
@@ -161,9 +161,9 @@ export function DashboardOverview() {
                 <div className="p-3 rounded-full bg-muted">
                   <Inbox className="w-5 h-5 text-muted-foreground" />
                 </div>
-                <p className="text-sm text-muted-foreground">No campaigns yet</p>
+                <p className="text-sm text-muted-foreground">Nenhuma campanha ainda</p>
                 <Button asChild size="sm" variant="outline" className="mt-1">
-                  <Link href="/campaigns/new">Create your first campaign</Link>
+                  <Link href="/campaigns/new">Criar sua primeira campanha</Link>
                 </Button>
               </div>
             ) : (
@@ -187,7 +187,7 @@ export function DashboardOverview() {
                       <Loader2 className="w-3.5 h-3.5 animate-spin text-info flex-shrink-0" />
                     )}
                     {c.status === "completed" && (
-                      <Badge variant="success" className="text-[10px] py-0">Done</Badge>
+                      <Badge variant="success" className="text-[10px] py-0">Concluída</Badge>
                     )}
                   </Link>
                 ))}

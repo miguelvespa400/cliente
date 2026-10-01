@@ -20,8 +20,8 @@ export function LoginForm() {
 
   const validate = () => {
     const errors: { email?: string; password?: string } = {};
-    if (!/^\S+@\S+\.\S+$/.test(email)) errors.email = "Enter a valid email address";
-    if (!password) errors.password = "Password is required";
+    if (!/^\S+@\S+\.\S+$/.test(email)) errors.email = "Informe um e-mail válido";
+    if (!password) errors.password = "Informe sua senha";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -35,7 +35,7 @@ export function LoginForm() {
       await login(email, password);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Falha ao entrar");
       setLoading(false);
     }
   };
@@ -51,11 +51,11 @@ export function LoginForm() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-slate-300">Email address</Label>
+            <Label htmlFor="email" className="text-slate-300">E-mail</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@company.com"
+              placeholder="voce@empresa.com.br"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-primary"
@@ -65,7 +65,7 @@ export function LoginForm() {
             {fieldErrors.email && <p className="text-xs text-destructive">{fieldErrors.email}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-slate-300">Password</Label>
+            <Label htmlFor="password" className="text-slate-300">Senha</Label>
             <Input
               id="password"
               type="password"
@@ -82,11 +82,11 @@ export function LoginForm() {
         <CardFooter className="flex flex-col gap-3 pb-6">
           <Button type="submit" variant="gradient" className="w-full" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Entrando..." : "Entrar"}
           </Button>
           <p className="text-sm text-slate-400 text-center">
-            Don&apos;t have an account?{" "}
-            <a href="/register" className="text-primary hover:text-primary/80">Sign up</a>
+            Não tem uma conta?{" "}
+            <a href="/register" className="text-primary hover:text-primary/80">Criar conta</a>
           </p>
         </CardFooter>
       </form>

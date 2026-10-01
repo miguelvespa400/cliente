@@ -66,9 +66,9 @@ export function LeadsMap({ leads }: Props) {
   if (leads.length > 0 && pinned.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-        <p className="text-sm font-medium">No coordinates available for these leads</p>
+        <p className="text-sm font-medium">Nenhuma coordenada disponível para estes leads</p>
         <p className="text-xs text-muted-foreground">
-          Coordinates are captured for new scrapes going forward
+          As coordenadas passam a ser capturadas nas próximas buscas
         </p>
       </div>
     );
@@ -88,7 +88,7 @@ export function LeadsMap({ leads }: Props) {
         className="h-full w-full"
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; Colaboradores do <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <FitBounds points={points} />
@@ -115,7 +115,7 @@ export function LeadsMap({ leads }: Props) {
                   href={`/leads/${lead.id}`}
                   className="flex items-center gap-0.5 pt-1 text-xs font-medium text-primary hover:underline"
                 >
-                  View details<ChevronRight className="w-3 h-3" />
+                  Ver detalhes<ChevronRight className="w-3 h-3" />
                 </Link>
               </div>
             </Popup>

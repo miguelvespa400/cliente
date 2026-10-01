@@ -10,10 +10,10 @@ export class ApiKeyGuard implements CanActivate {
     const req = ctx.switchToHttp().getRequest();
     const authHeader: string | undefined = req.headers.authorization;
 
-    if (!authHeader?.startsWith("ApiKey ")) throw new UnauthorizedException("Missing or invalid API key");
+    if (!authHeader?.startsWith("ApiKey ")) throw new UnauthorizedException("Chave de API ausente ou inválida");
 
     const plaintext = authHeader.slice(7).trim();
-    if (!plaintext.startsWith("px_")) throw new UnauthorizedException("Invalid API key format");
+    if (!plaintext.startsWith("px_")) throw new UnauthorizedException("Formato de chave de API inválido");
 
     const keyHash = createHash("sha256").update(plaintext).digest("hex");
 
@@ -22,9 +22,9 @@ export class ApiKeyGuard implements CanActivate {
       include: { workspace: true },
     });
 
-    if (!apiKey) throw new UnauthorizedException("API key not found or revoked");
+    if (!apiKey) throw new UnauthorizedException("Chave de API não encontrada ou revogada");
     if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
-      throw new UnauthorizedException("API key has expired");
+      throw new UnauthorizedException("A chave de API expirou");
     }
 
     // Update lastUsedAt without blocking the request

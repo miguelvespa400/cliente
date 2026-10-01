@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { LeadDetail } from "@/components/leads/lead-detail";
 
-export const metadata: Metadata = { title: "Lead Detail | Prospex" };
+export const metadata: Metadata = { title: "Detalhes do lead | Prospex" };
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

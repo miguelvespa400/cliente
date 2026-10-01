@@ -55,7 +55,7 @@ export class LeadsService {
         followUps: { where: { done: false }, orderBy: { scheduledAt: "asc" } },
       },
     });
-    if (!lead) throw new NotFoundException(`Lead ${id} not found`);
+    if (!lead) throw new NotFoundException(`Lead ${id} não encontrado`);
     return lead;
   }
 
@@ -88,6 +88,9 @@ export class LeadsService {
     lat?: number;
     lng?: number;
     phone?: string;
+    email?: string;
+    category?: string;
+    source?: string;
     website?: string;
     rating?: string;
     reviewCount?: number;

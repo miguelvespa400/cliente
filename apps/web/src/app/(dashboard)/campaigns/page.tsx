@@ -5,8 +5,8 @@ export default function CampaignsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Campaigns</h1>
-          <p className="text-muted-foreground">Manage your lead generation campaigns</p>
+          <h1 className="text-2xl font-bold tracking-tight">Campanhas</h1>
+          <p className="text-muted-foreground">Gerencie suas campanhas de geração de leads</p>
         </div>
       </div>
       <CampaignsList />

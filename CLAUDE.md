@@ -53,7 +53,7 @@ Everything in Prisma is scoped under `Workspace` (`packages/database/prisma/sche
 ### Campaign → scrape → score → content pipeline
 This is the core async flow, and touches four modules together:
 1. `POST /api/scraper/campaigns/:id/start` (`apps/api/src/scraper/scraper.controller.ts`) enqueues a BullMQ job on the `scraper` queue (Redis-backed, configured in `scraper.module.ts`).
-2. `ScraperProcessor` (`scraper.processor.ts`) is the worker: it drives `GoogleMapsScraperService` (Playwright-based Google Maps scraping) to collect raw leads, updates `Campaign.status`/`progress` as it goes (`draft → running → completed|failed`).
+2. `ScraperProcessor` (`scraper.processor.ts`) is the worker: it collects raw leads via `SCRAPER_PROVIDER` — `gosom` (default, `gosom.scraper.ts`: REST client for an external [gosom/google-maps-scraper](https://github.com/gosom/google-maps-scraper) running with `-web` at `GOSOM_URL`; returns emails/category too) or `playwright` (`google-maps.scraper.ts`, built-in) — and updates `Campaign.status`/`progress` as it goes (`draft → running → completed|failed`). A scrape failure fails the campaign; fake leads are only generated with `SCRAPER_MOCK_FALLBACK=true` (dev/CI).
 3. Raw leads are scored via `LeadIntelligenceService` (`apps/api/src/ai`), then per-lead AI outreach content (email/WhatsApp/IG DM/LinkedIn/cold-call script) is generated via `MarketingAiService`.
 4. Both AI services wrap the OpenAI SDK but are provider-agnostic — `OPENAI_BASE_URL` can point at OpenRouter or a local Ollama instance, and leaving `OPENAI_API_KEY` empty makes them fall back to deterministic mock content (this is what CI does, and it's the intended way to develop without burning API credits).
 

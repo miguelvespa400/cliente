@@ -3,7 +3,7 @@ import Link from "next/link";
 import { RegisterForm } from "@/components/auth/register-form";
 import { AuthMotionWrapper } from "@/components/auth/auth-motion-wrapper";
 
-export const metadata: Metadata = { title: "Create Account | Prospex" };
+export const metadata: Metadata = { title: "Criar conta | Prospex" };
 
 export default function RegisterPage() {
   return (
@@ -19,13 +19,13 @@ export default function RegisterPage() {
             </div>
             <span className="text-white font-semibold text-xl">Prospex</span>
           </Link>
-          <h1 className="text-2xl font-bold text-white">Create your account</h1>
-          <p className="text-slate-400 mt-1 text-sm">Start finding leads with AI — free forever</p>
+          <h1 className="text-2xl font-bold text-white">Crie sua conta</h1>
+          <p className="text-slate-400 mt-1 text-sm">Comece a encontrar leads com IA — grátis para sempre</p>
         </div>
         <RegisterForm />
         <p className="text-center text-sm text-slate-500 mt-4">
-          Already have an account?{" "}
-          <Link href="/login" className="text-primary hover:text-primary/80 font-medium">Sign in</Link>
+          Já tem uma conta?{" "}
+          <Link href="/login" className="text-primary hover:text-primary/80 font-medium">Entrar</Link>
         </p>
       </AuthMotionWrapper>
     </div>

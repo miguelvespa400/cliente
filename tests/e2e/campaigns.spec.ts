@@ -10,15 +10,15 @@ const CAMPAIGN = {
 test.describe("Campaigns", () => {
   test("campaigns list page loads", async ({ authedPage: page }) => {
     await page.goto("/campaigns");
-    await expect(page.getByRole("heading", { name: /campaigns/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /campanhas/i })).toBeVisible();
   });
 
   test("create campaign form renders all required fields", async ({ authedPage: page }) => {
     await page.goto("/campaigns/new");
     await expect(page.locator("#name")).toBeVisible();
-    await expect(page.getByText("Location", { exact: true })).toBeVisible();
-    await expect(page.getByText("Industry", { exact: true })).toBeVisible();
-    await expect(page.getByText("Search Queries", { exact: true })).toBeVisible();
+    await expect(page.getByText("Localização", { exact: true })).toBeVisible();
+    await expect(page.getByText("Segmento", { exact: true })).toBeVisible();
+    await expect(page.getByText("Termos de busca", { exact: true })).toBeVisible();
   });
 
   test("create campaign → starts scraper → completes with leads", async ({ authedPage: page }) => {
@@ -26,18 +26,18 @@ test.describe("Campaigns", () => {
 
     // Fill form
     await page.fill("#name", CAMPAIGN.name);
-    await page.fill('input[placeholder*="Jakarta"], input[placeholder*="location"], #location', CAMPAIGN.location);
+    await page.fill('input[placeholder*="Curitiba, PR"], #location', CAMPAIGN.location);
 
     // Select industry (first available option)
-    await page.locator('[id="industry"], button:has-text("Select industry")').first().click();
+    await page.locator('[id="industry"], button:has-text("Selecione o segmento")').first().click();
     await page.locator('[role="option"]').first().click();
 
     // Search query — scoped test id, since the header's global search box
-    // also has a placeholder containing "Search" and would otherwise match.
+    // also has a placeholder containing "Buscar" and would otherwise match.
     await page.getByTestId("query-input").first().fill(CAMPAIGN.query);
 
     // Your service
-    const serviceField = page.locator('textarea, input[placeholder*="service"]').first();
+    const serviceField = page.locator('textarea, input[placeholder*="Descreva o que você oferece"]').first();
     if (await serviceField.isVisible()) await serviceField.fill(CAMPAIGN.service);
 
     // Submit
@@ -50,17 +50,17 @@ test.describe("Campaigns", () => {
     await expect(page.getByText(CAMPAIGN.name)).toBeVisible();
 
     // Wait for campaign to complete (scraper uses mock fallback — should finish in < 30s)
-    await expect(page.getByText("Completed")).toBeVisible({ timeout: 45000 });
+    await expect(page.getByText("Concluída")).toBeVisible({ timeout: 45000 });
   });
 
   test("completed campaign shows leads", async ({ authedPage: page }) => {
     await page.goto("/campaigns");
 
     // Find first completed campaign and click it
-    const completedBadge = page.locator("text=Completed").first();
+    const completedBadge = page.locator("text=Concluída").first();
     await expect(completedBadge).toBeVisible({ timeout: 10000 });
 
-    // Click the campaign row/card. Excludes the ever-present "New Campaign"
+    // Click the campaign row/card. Excludes the ever-present "Nova campanha"
     // button, whose href ("/campaigns/new") would otherwise match first.
     await page.locator("a[href^='/campaigns/']:not([href='/campaigns/new'])").first().click();
     await page.waitForURL(/\/campaigns\/(?!new$)[a-z0-9-]+$/);

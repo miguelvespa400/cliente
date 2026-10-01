@@ -97,7 +97,7 @@ export function SettingsPage() {
       setSavedWorkspace(true);
       setTimeout(() => setSavedWorkspace(false), 2000);
     } catch (e) {
-      setWorkspaceError(e instanceof Error ? e.message : "Failed to save workspace");
+      setWorkspaceError(e instanceof Error ? e.message : "Não foi possível salvar o workspace");
     } finally {
       setSavingWorkspace(false);
     }
@@ -169,18 +169,18 @@ export function SettingsPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your workspace settings and integrations</p>
+        <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
+        <p className="text-muted-foreground">Gerencie as configurações e integrações do seu workspace</p>
       </div>
 
       <Tabs defaultValue="workspace">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="workspace">Workspace</TabsTrigger>
-          <TabsTrigger value="ai">AI & API Keys</TabsTrigger>
-          <TabsTrigger value="integrations">Integrations</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
+          <TabsTrigger value="ai">IA e chaves de API</TabsTrigger>
+          <TabsTrigger value="integrations">Integrações</TabsTrigger>
+          <TabsTrigger value="team">Equipe</TabsTrigger>
           <TabsTrigger value="danger" className="text-destructive data-[state=active]:text-destructive">
-            Danger Zone
+            Zona de perigo
           </TabsTrigger>
         </TabsList>
 
@@ -191,7 +191,7 @@ export function SettingsPage() {
                 <Globe className="w-4 h-4 text-muted-foreground" />
                 <CardTitle className="text-base">Workspace</CardTitle>
               </div>
-              <CardDescription>Your workspace information</CardDescription>
+              <CardDescription>Informações do seu workspace</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {workspaceError && (
@@ -199,7 +199,7 @@ export function SettingsPage() {
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Workspace Name</Label>
+                  <Label>Nome do workspace</Label>
                   <Input value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
@@ -209,7 +209,7 @@ export function SettingsPage() {
               </div>
               <Button variant="gradient" onClick={saveWorkspace} disabled={savingWorkspace}>
                 {savingWorkspace && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {savedWorkspace ? "Saved!" : "Save changes"}
+                {savedWorkspace ? "Salvo!" : "Salvar alterações"}
               </Button>
             </CardContent>
           </Card>
@@ -221,17 +221,17 @@ export function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Key className="w-4 h-4 text-muted-foreground" />
-                <CardTitle className="text-base">AI Configuration</CardTitle>
+                <CardTitle className="text-base">Configuração de IA</CardTitle>
               </div>
-              <CardDescription>Configure your AI provider for lead scoring and content generation</CardDescription>
+              <CardDescription>Configure seu provedor de IA para pontuação de leads e geração de conteúdo</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>OpenAI API Key</Label>
+                <Label>Chave de API da OpenAI</Label>
                 <div className="flex gap-2">
                   <Input
                     type={showKey ? "text" : "password"}
-                    placeholder="sk-... or your provider key"
+                    placeholder="sk-... ou a chave do seu provedor"
                     value={openaiKey}
                     onChange={(e) => setOpenaiKey(e.target.value)}
                     className="flex-1"
@@ -245,13 +245,13 @@ export function SettingsPage() {
                     {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Used for AI content generation and lead scoring</p>
+                <p className="text-xs text-muted-foreground">Usada na geração de conteúdo com IA e na pontuação de leads</p>
               </div>
               <Separator />
               <div className="space-y-2">
-                <Label>Model</Label>
+                <Label>Modelo</Label>
                 <Input
-                  placeholder="e.g. gpt-4o-mini, gemini-flash, claude-haiku"
+                  placeholder="ex.: gpt-4o-mini, gemini-flash, claude-haiku"
                   value={openaiModel}
                   onChange={(e) => setOpenaiModel(e.target.value)}
                 />
@@ -259,11 +259,11 @@ export function SettingsPage() {
               <Separator />
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>Custom Base URL</Label>
-                  <Badge variant="secondary" className="text-xs">Optional (OpenRouter/Ollama)</Badge>
+                  <Label>URL base personalizada</Label>
+                  <Badge variant="secondary" className="text-xs">Opcional (OpenRouter/Ollama)</Badge>
                 </div>
                 <Input
-                  placeholder="e.g. http://localhost:8045/v1"
+                  placeholder="ex.: http://localhost:8045/v1"
                   value={openaiBase}
                   onChange={(e) => setOpenaiBase(e.target.value)}
                 />
@@ -274,7 +274,7 @@ export function SettingsPage() {
                 ) : savedIntegration ? (
                   <Check className="mr-2 h-4 w-4" />
                 ) : null}
-                {savedIntegration ? "Saved!" : "Save AI config"}
+                {savedIntegration ? "Salvo!" : "Salvar configuração de IA"}
               </Button>
             </CardContent>
           </Card>
@@ -285,16 +285,16 @@ export function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Key className="w-4 h-4 text-muted-foreground" />
-                  <CardTitle className="text-base">Prospex API Keys</CardTitle>
+                  <CardTitle className="text-base">Chaves de API do Prospex</CardTitle>
                 </div>
               </div>
-              <CardDescription>Keys to access the Prospex API from external tools</CardDescription>
+              <CardDescription>Chaves para acessar a API do Prospex a partir de ferramentas externas</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* New key reveal */}
               {newKey && (
                 <div className="bg-success/10 border border-success/30 rounded-lg p-3 space-y-2">
-                  <p className="text-sm font-medium text-success">New key created — copy it now, it won&apos;t be shown again</p>
+                  <p className="text-sm font-medium text-success">Nova chave criada — copie agora, ela não será exibida novamente</p>
                   <div className="flex gap-2">
                     <Input value={newKey.key} readOnly className="font-mono text-xs" />
                     <Button variant="outline" size="icon" onClick={() => copyKey(newKey.key)}>
@@ -302,7 +302,7 @@ export function SettingsPage() {
                     </Button>
                   </div>
                   <Button variant="ghost" size="sm" className="text-xs" onClick={() => setNewKey(null)}>
-                    Dismiss
+                    Dispensar
                   </Button>
                 </div>
               )}
@@ -310,7 +310,7 @@ export function SettingsPage() {
               {/* Create new key */}
               <div className="flex gap-2">
                 <Input
-                  placeholder="Key name (e.g. Production, Zapier)"
+                  placeholder="Nome da chave (ex.: Produção, Zapier)"
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && createApiKey()}
@@ -319,7 +319,7 @@ export function SettingsPage() {
                   onClick={createApiKey}
                   disabled={creating || !newKeyName.trim()}
                   className="flex-shrink-0"
-                  aria-label="Create API key"
+                  aria-label="Criar chave de API"
                 >
                   {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 </Button>
@@ -331,7 +331,7 @@ export function SettingsPage() {
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
               ) : apiKeys.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No API keys yet</p>
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhuma chave de API ainda</p>
               ) : (
                 <div className="space-y-2">
                   {apiKeys.map((key) => (
@@ -339,8 +339,8 @@ export function SettingsPage() {
                       <div>
                         <p className="text-sm font-medium">{key.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          Created {formatDate(key.createdAt)}
-                          {key.lastUsedAt && ` · Last used ${formatDate(key.lastUsedAt)}`}
+                          Criada em {formatDate(key.createdAt)}
+                          {key.lastUsedAt && ` · Último uso em ${formatDate(key.lastUsedAt)}`}
                         </p>
                       </div>
                       <Button
@@ -348,7 +348,7 @@ export function SettingsPage() {
                         size="icon"
                         className="text-muted-foreground hover:text-destructive"
                         onClick={() => setKeyPendingDelete(key)}
-                        aria-label="Delete API key"
+                        aria-label="Excluir chave de API"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -365,24 +365,24 @@ export function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-muted-foreground" />
-                <CardTitle className="text-base">Integrations</CardTitle>
+                <CardTitle className="text-base">Integrações</CardTitle>
               </div>
-              <CardDescription>Connect external services</CardDescription>
+              <CardDescription>Conecte serviços externos</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {[
-                  { name: "WhatsApp Business", description: "Send WhatsApp messages to leads" },
-                  { name: "Gmail", description: "Send emails directly from Prospex" },
-                  { name: "Telegram", description: "Get notifications via Telegram" },
-                  { name: "Webhook", description: "Send data to any HTTP endpoint" },
+                  { name: "WhatsApp Business", description: "Envie mensagens de WhatsApp para leads" },
+                  { name: "Gmail", description: "Envie e-mails diretamente pelo Prospex" },
+                  { name: "Telegram", description: "Receba notificações pelo Telegram" },
+                  { name: "Webhook", description: "Envie dados para qualquer endpoint HTTP" },
                 ].map((integration) => (
                   <div key={integration.name} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <p className="text-sm font-medium">{integration.name}</p>
                       <p className="text-xs text-muted-foreground">{integration.description}</p>
                     </div>
-                    <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+                    <Badge variant="secondary" className="text-xs">Em breve</Badge>
                   </div>
                 ))}
               </div>
@@ -395,22 +395,22 @@ export function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-muted-foreground" />
-                <CardTitle className="text-base">Team Members</CardTitle>
+                <CardTitle className="text-base">Membros da equipe</CardTitle>
               </div>
-              <CardDescription>Invite your team to collaborate</CardDescription>
+              <CardDescription>Convide sua equipe para colaborar</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center gap-3 p-3 border rounded-lg">
                   <div className="w-8 h-8 bg-gradient-brand rounded-full flex items-center justify-center text-white text-sm font-bold">A</div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">Admin</p>
+                    <p className="text-sm font-medium">Administrador</p>
                     <p className="text-xs text-muted-foreground">admin@prospex.io</p>
                   </div>
-                  <Badge>Owner</Badge>
+                  <Badge>Proprietário</Badge>
                 </div>
                 <Button variant="outline" className="w-full">
-                  <Users className="mr-2 h-4 w-4" />Invite team member
+                  <Users className="mr-2 h-4 w-4" />Convidar membro da equipe
                 </Button>
               </div>
             </CardContent>
@@ -422,17 +422,17 @@ export function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-destructive" />
-                <CardTitle className="text-base text-destructive">Danger Zone</CardTitle>
+                <CardTitle className="text-base text-destructive">Zona de perigo</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium">Delete workspace</p>
-                  <p className="text-xs text-muted-foreground">Permanently delete your workspace and all data</p>
+                  <p className="text-sm font-medium">Excluir workspace</p>
+                  <p className="text-xs text-muted-foreground">Exclua permanentemente seu workspace e todos os dados</p>
                 </div>
                 <Button variant="destructive" size="sm" onClick={() => setConfirmDeleteWorkspace(true)}>
-                  Delete workspace
+                  Excluir workspace
                 </Button>
               </div>
             </CardContent>
@@ -443,20 +443,20 @@ export function SettingsPage() {
       <Dialog open={!!keyPendingDelete} onOpenChange={(open) => !open && setKeyPendingDelete(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete API key?</DialogTitle>
+            <DialogTitle>Excluir chave de API?</DialogTitle>
             <DialogDescription>
               {keyPendingDelete && (
                 <>
-                  This will immediately revoke <strong>{keyPendingDelete.name}</strong>. Any integration using
-                  this key will stop working. This can&apos;t be undone.
+                  Isso revogará imediatamente <strong>{keyPendingDelete.name}</strong>. Qualquer integração que use
+                  esta chave deixará de funcionar. Esta ação não pode ser desfeita.
                 </>
               )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setKeyPendingDelete(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setKeyPendingDelete(null)}>Cancelar</Button>
             <Button variant="destructive" onClick={() => keyPendingDelete && deleteApiKey(keyPendingDelete.id)}>
-              Delete key
+              Excluir chave
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -465,16 +465,16 @@ export function SettingsPage() {
       <Dialog open={confirmDeleteWorkspace} onOpenChange={setConfirmDeleteWorkspace}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete workspace?</DialogTitle>
+            <DialogTitle>Excluir workspace?</DialogTitle>
             <DialogDescription>
-              This will permanently delete <strong>{workspaceName || "this workspace"}</strong>{" "}
-              and all of its leads, campaigns, and data. This can&apos;t be undone.
+              Isso excluirá permanentemente <strong>{workspaceName || "este workspace"}</strong>{" "}
+              e todos os seus leads, campanhas e dados. Esta ação não pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDeleteWorkspace(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setConfirmDeleteWorkspace(false)}>Cancelar</Button>
             <Button variant="destructive" onClick={() => setConfirmDeleteWorkspace(false)}>
-              Delete workspace
+              Excluir workspace
             </Button>
           </DialogFooter>
         </DialogContent>

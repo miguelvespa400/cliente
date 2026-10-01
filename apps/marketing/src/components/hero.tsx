@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Github, Zap } from "lucide-react";
+import { REPO_URL, SIGNUP_URL } from "@/lib/config";
 
 export function Hero() {
   return (
@@ -41,13 +42,13 @@ export function Hero() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-16">
           <Link
-            href="http://localhost:3000/register"
+            href={SIGNUP_URL}
             className="flex items-center gap-2 bg-gradient-brand text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-glow hover:brightness-110 hover:-translate-y-0.5 text-sm"
           >
             Start for free <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
-            href="https://github.com/asiifdev/business-leads-ai-automation"
+            href={REPO_URL}
             target="_blank"
             className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white px-6 py-3 rounded-xl font-semibold transition-all text-sm"
           >

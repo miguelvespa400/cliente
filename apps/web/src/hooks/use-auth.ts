@@ -49,7 +49,7 @@ export function useAuth() {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error((err as { message?: string }).message || "Login failed");
+      throw new Error((err as { message?: string }).message || "Falha ao entrar");
     }
     const data = await res.json() as { token: string; user: AuthUser; workspace: AuthWorkspace };
     localStorage.setItem(TOKEN_KEY, data.token);
@@ -67,7 +67,7 @@ export function useAuth() {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error((err as { message?: string }).message || "Registration failed");
+      throw new Error((err as { message?: string }).message || "Falha ao criar a conta");
     }
     const data = await res.json() as { token: string; user: AuthUser; workspace: AuthWorkspace };
     localStorage.setItem(TOKEN_KEY, data.token);

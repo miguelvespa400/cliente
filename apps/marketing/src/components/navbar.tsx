@@ -5,11 +5,12 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Github, Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { REPO_URL, SIGNUP_URL } from "@/lib/config";
 
 const links = [
   { href: "#features", label: "Features" },
   { href: "#how-it-works", label: "How it works" },
-  { href: "https://github.com/asiifdev/business-leads-ai-automation", label: "Docs", external: true },
+  { href: REPO_URL, label: "Docs", external: true },
 ];
 
 export function Navbar() {
@@ -56,7 +57,7 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <ThemeToggle />
           <Link
-            href="https://github.com/asiifdev/business-leads-ai-automation"
+            href={REPO_URL}
             target="_blank"
             className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors"
           >
@@ -64,7 +65,7 @@ export function Navbar() {
             <span>GitHub</span>
           </Link>
           <Link
-            href="http://localhost:3000/register"
+            href={SIGNUP_URL}
             className="bg-gradient-brand text-white text-sm px-4 py-1.5 rounded-lg font-medium transition-all shadow-glow hover:brightness-110"
           >
             Get started
@@ -104,7 +105,7 @@ export function Navbar() {
               <div className="flex items-center justify-between pt-2 border-t border-white/5">
                 <ThemeToggle />
                 <Link
-                  href="http://localhost:3000/register"
+                  href={SIGNUP_URL}
                   className="bg-gradient-brand text-white text-sm px-4 py-1.5 rounded-lg font-medium shadow-glow"
                 >
                   Get started

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Github, Star, GitFork, ArrowRight } from "lucide-react";
+import { REPO_PATH, REPO_URL, SIGNUP_URL } from "@/lib/config";
 
 export function OpenSource() {
   return (
@@ -33,7 +34,7 @@ export function OpenSource() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12">
           <Link
-            href="https://github.com/asiifdev/business-leads-ai-automation"
+            href={REPO_URL}
             target="_blank"
             className="flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-xl font-semibold hover:bg-slate-100 transition-all text-sm shadow-lg hover:-translate-y-0.5"
           >
@@ -41,7 +42,7 @@ export function OpenSource() {
             View on GitHub
           </Link>
           <Link
-            href="http://localhost:3000/register"
+            href={SIGNUP_URL}
             className="flex items-center gap-2 bg-gradient-brand text-white px-6 py-3 rounded-xl font-semibold transition-all text-sm shadow-glow hover:-translate-y-0.5"
           >
             Try it now <ArrowRight className="w-4 h-4" />
@@ -67,7 +68,7 @@ export function OpenSource() {
           </div>
           <pre className="text-sm font-mono leading-relaxed">
             <span className="text-slate-500"># Clone &amp; install{"\n"}</span>
-            <span className="text-emerald-400">git clone</span><span className="text-slate-300"> github.com/asiifdev/business-leads-ai-automation{"\n"}</span>
+            <span className="text-emerald-400">git clone</span><span className="text-slate-300"> {REPO_PATH}{"\n"}</span>
             <span className="text-emerald-400">pnpm install{"\n\n"}</span>
             <span className="text-slate-500"># Start infrastructure{"\n"}</span>
             <span className="text-emerald-400">docker compose up</span><span className="text-slate-300"> -d{"\n\n"}</span>

@@ -33,3 +33,7 @@ coverage/
 apps/marketing/next-env.d.ts
 apps/web/next-env.d.ts
 apps/web/next-env.d.ts
+
+# Test reports
+playwright-report/
+test-results/

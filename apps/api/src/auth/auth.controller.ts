@@ -42,7 +42,7 @@ export class AuthController {
       const payload = this.jwt.verify<{ sub: string }>(token);
       return this.authService.me(payload.sub);
     } catch {
-      throw new UnauthorizedException("Invalid or expired token");
+      throw new UnauthorizedException("Sessão inválida ou expirada");
     }
   }
 

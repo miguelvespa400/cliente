@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Phone, Globe, MapPin, Star, ChevronRight, Users } from "lucide-react";
 import type { Lead } from "@/hooks/use-leads";
+import { CRM_STATUS_LABELS, PRIORITY_LABELS, labelFor } from "@/lib/labels";
 
 const container = {
   hidden: { opacity: 0 },
@@ -17,9 +18,9 @@ const item = {
 };
 
 function PriorityBadge({ priority }: { priority: Lead["priority"] }) {
-  if (priority === "HIGH") return <Badge variant="success">High</Badge>;
-  if (priority === "MEDIUM") return <Badge variant="warning">Medium</Badge>;
-  return <Badge variant="secondary">Low</Badge>;
+  if (priority === "HIGH") return <Badge variant="success">{PRIORITY_LABELS.HIGH}</Badge>;
+  if (priority === "MEDIUM") return <Badge variant="warning">{PRIORITY_LABELS.MEDIUM}</Badge>;
+  return <Badge variant="secondary">{PRIORITY_LABELS.LOW}</Badge>;
 }
 
 function CrmBadge({ status }: { status: Lead["crmStatus"] }) {
@@ -32,7 +33,7 @@ function CrmBadge({ status }: { status: Lead["crmStatus"] }) {
     won: "success",
     lost: "destructive",
   };
-  return <Badge variant={map[status]} className="capitalize">{status}</Badge>;
+  return <Badge variant={map[status]}>{labelFor(CRM_STATUS_LABELS, status)}</Badge>;
 }
 
 interface Props {
@@ -63,8 +64,8 @@ export function LeadsTable({ leads, loading }: Props) {
         <div className="p-3 rounded-full bg-muted">
           <Users className="w-5 h-5 text-muted-foreground" />
         </div>
-        <p className="text-sm font-medium">No leads found</p>
-        <p className="text-xs text-muted-foreground">Try adjusting your search or filters</p>
+        <p className="text-sm font-medium">Nenhum lead encontrado</p>
+        <p className="text-xs text-muted-foreground">Tente ajustar a busca ou os filtros</p>
       </div>
     );
   }
@@ -105,10 +106,10 @@ export function LeadsTable({ leads, loading }: Props) {
             )}
             <div className="text-right hidden sm:block">
               <div className="text-sm font-bold text-primary">{lead.score}</div>
-              <div className="text-[10px] text-muted-foreground">Score</div>
+              <div className="text-[10px] text-muted-foreground">Pontuação</div>
             </div>
             <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-              <Link href={`/leads/${lead.id}`}><ChevronRight className="h-4 w-4" /></Link>
+              <Link href={`/leads/${lead.id}`} aria-label={`Ver detalhes de ${lead.name}`}><ChevronRight className="h-4 w-4" /></Link>
             </Button>
           </div>
         </motion.div>

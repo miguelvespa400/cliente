@@ -1,11 +1,13 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job } from "bullmq";
 import { CampaignsService } from "../campaigns/campaigns.service";
 import { LeadsService } from "../leads/leads.service";
 import { LeadIntelligenceService } from "../ai/lead-intelligence.service";
 import { MarketingAiService } from "../ai/marketing-ai.service";
-import { GoogleMapsScraperService } from "./google-maps.scraper";
+import { GoogleMapsScraperService, type ScrapedBusiness } from "./google-maps.scraper";
+import { GosomScraperService } from "./gosom.scraper";
 
 export interface ScraperJobData {
   campaignId: string;
@@ -30,6 +32,8 @@ export class ScraperProcessor extends WorkerHost {
     private leadIntelligence: LeadIntelligenceService,
     private marketingAi: MarketingAiService,
     private googleMaps: GoogleMapsScraperService,
+    private gosom: GosomScraperService,
+    private config: ConfigService,
   ) {
     super();
   }
@@ -83,6 +87,9 @@ export class ScraperProcessor extends WorkerHost {
             name: lead.name,
             address: lead.address,
             phone: lead.phone,
+            email: lead.email || undefined,
+            category: lead.mapsCategory || undefined,
+            source: lead.source,
             website: lead.website,
             rating: lead.rating,
             reviewCount: lead.reviewCount ?? undefined,
@@ -125,15 +132,64 @@ export class ScraperProcessor extends WorkerHost {
   }
 
   private async scrapeLeads(data: ScraperJobData, campaignId: string) {
-    const areas = data.location
-      .split(",")
-      .map((a) => a.trim())
-      .filter(Boolean);
-    if (areas.length === 0) areas.push(data.location);
+    // Não usamos split(",") na localização: "Curitiba, PR" é uma cidade só, não duas áreas.
+    const area = data.location.trim();
+    const combos = data.searchQueries
+      .map((q) => q.trim())
+      .filter(Boolean)
+      .map((query) => ({
+        query: area && !query.toLowerCase().includes(area.split(",")[0].trim().toLowerCase())
+          ? `${query} ${area}`
+          : query,
+        area,
+      }));
+    if (combos.length === 0) combos.push({ query: `${data.industry} ${area}`.trim(), area });
 
-    const combos = data.searchQueries.flatMap((query) =>
-      areas.map((area) => ({ query: `${query} ${area}`.trim(), area })),
-    );
+    const results =
+      this.config.get<string>("SCRAPER_PROVIDER", "gosom") === "gosom"
+        ? await this.scrapeWithGosom(data, campaignId, combos)
+        : await this.scrapeWithPlaywright(data, campaignId, combos);
+
+    // Deduplicate by name+address
+    const seen = new Set<string>();
+    return results
+      .filter((b) => {
+        const key = `${b.name.toLowerCase()}|${b.address.toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, data.maxResults);
+  }
+
+  private async scrapeWithGosom(
+    data: ScraperJobData,
+    campaignId: string,
+    combos: { query: string; area: string }[],
+  ) {
+    try {
+      const raw = await this.gosom.scrape(
+        combos.map((c) => c.query),
+        {
+          language: data.language,
+          maxResults: Math.ceil(data.maxResults / combos.length),
+          onProgress: async (f) => {
+            await this.campaigns.updateStatus(campaignId, "running", Math.round(f * 28));
+          },
+        },
+      );
+      this.logger.log(`gosom: ${raw.length} resultados para ${combos.length} buscas`);
+      return raw.map((b) => this.normalizeRaw(b, data.industry));
+    } catch (err) {
+      return this.handleScrapeFailure(data, combos, err);
+    }
+  }
+
+  private async scrapeWithPlaywright(
+    data: ScraperJobData,
+    campaignId: string,
+    combos: { query: string; area: string }[],
+  ) {
     const perQuery = Math.ceil(data.maxResults / combos.length);
     const results: ReturnType<typeof this.normalizeRaw>[] = [];
 
@@ -144,38 +200,30 @@ export class ScraperProcessor extends WorkerHost {
         results.push(...raw.map((b) => this.normalizeRaw(b, data.industry)));
         this.logger.log(`Query "${combo.query}": ${raw.length} results`);
       } catch (err) {
-        this.logger.warn(`Scrape failed for "${combo.query}", using mock fallback: ${err}`);
-        results.push(...this.generateMockLeads(data, combo.query, combo.area, perQuery));
+        results.push(...this.handleScrapeFailure(data, [combo], err));
       }
       const pct = Math.round(((i + 1) / combos.length) * 28);
       await this.campaigns.updateStatus(campaignId, "running", pct);
     }
-
-    // Deduplicate by name+address
-    const seen = new Set<string>();
-    return results.filter((b) => {
-      const key = `${b.name.toLowerCase()}|${b.address.toLowerCase()}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    return results;
   }
 
-  private normalizeRaw(
-    raw: {
-      name: string;
-      address: string;
-      phone: string;
-      website: string;
-      rating: string;
-      reviewCount?: number | null;
-      hasWebsite: boolean;
-      referenceLink?: string;
-      lat?: number | null;
-      lng?: number | null;
-    },
-    industry: string,
+  // Leads fictícios só com SCRAPER_MOCK_FALLBACK=true (dev/CI). Em uso real, a falha
+  // precisa aparecer na campanha — prospectar empresas inventadas é pior que não ter leads.
+  private handleScrapeFailure(
+    data: ScraperJobData,
+    combos: { query: string; area: string }[],
+    err: unknown,
   ) {
+    if (this.config.get<string>("SCRAPER_MOCK_FALLBACK", "false") !== "true") {
+      throw new Error(`Falha na coleta do Google Maps: ${err instanceof Error ? err.message : err}`);
+    }
+    this.logger.warn(`Scrape failed, using mock fallback: ${err}`);
+    const perQuery = Math.ceil(data.maxResults / combos.length);
+    return combos.flatMap((c) => this.generateMockLeads(data, c.query, c.area, perQuery));
+  }
+
+  private normalizeRaw(raw: ScrapedBusiness, industry: string) {
     return {
       name: raw.name,
       address: raw.address,
@@ -187,6 +235,9 @@ export class ScraperProcessor extends WorkerHost {
       referenceUrl: raw.referenceLink ?? "",
       lat: raw.lat ?? null,
       lng: raw.lng ?? null,
+      email: raw.email ?? "",
+      mapsCategory: raw.category ?? "",
+      source: raw.source?.startsWith("Google Maps") ? "google_maps" : "mock",
       industry,
     };
   }
@@ -209,6 +260,9 @@ export class ScraperProcessor extends WorkerHost {
       referenceUrl: "",
       lat: null,
       lng: null,
+      email: "",
+      mapsCategory: "",
+      source: "mock",
       industry: data.industry,
     }));
   }

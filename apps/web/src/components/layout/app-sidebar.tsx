@@ -19,15 +19,15 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 
 const navItems = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { title: "Campaigns", href: "/campaigns", icon: Megaphone, badge: "New" },
+  { title: "Painel", href: "/dashboard", icon: LayoutDashboard },
+  { title: "Campanhas", href: "/campaigns", icon: Megaphone, badge: "Novo" },
   { title: "Leads", href: "/leads", icon: Users },
-  { title: "Analytics", href: "/analytics", icon: BarChart3 },
+  { title: "Análises", href: "/analytics", icon: BarChart3 },
 ];
 
 const bottomItems = [
-  { title: "Integrations", href: "/integrations", icon: Zap },
-  { title: "Settings", href: "/settings", icon: Settings },
+  { title: "Integrações", href: "/integrations", icon: Zap },
+  { title: "Configurações", href: "/settings", icon: Settings },
 ];
 
 export function SidebarContent() {
@@ -58,7 +58,7 @@ export function SidebarContent() {
             <Building2 className="w-3 h-3 text-white" />
           </div>
           <span className="flex-1 text-left font-medium truncate">
-            {workspace?.name ?? "My Workspace"}
+            {workspace?.name ?? "Meu workspace"}
           </span>
           <ChevronDown className="w-3.5 h-3.5 text-sidebar-foreground/50 flex-shrink-0" />
         </button>
@@ -131,7 +131,7 @@ export function SidebarContent() {
               </div>
               <div className="flex-1 text-left min-w-0">
                 <p className="text-sidebar-foreground text-xs font-medium truncate">
-                  {user?.name ?? "Admin"}
+                  {user?.name ?? "Administrador"}
                 </p>
                 <p className="text-sidebar-foreground/50 text-[11px] truncate">
                   {user?.email ?? "admin@prospex.io"}
@@ -141,11 +141,11 @@ export function SidebarContent() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" side="top" className="w-56">
             <DropdownMenuItem asChild>
-              <Link href="/settings">Account settings</Link>
+              <Link href="/settings">Configurações da conta</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
-              <LogOut className="w-3.5 h-3.5 mr-1" /> Sign out
+              <LogOut className="w-3.5 h-3.5 mr-1" /> Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

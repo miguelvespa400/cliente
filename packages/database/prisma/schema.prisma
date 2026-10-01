@@ -116,7 +116,7 @@ model Campaign {
   maxResults    Int       @default(20)
   yourService   String
   contentStyle  String    @default("balanced")
-  language      String    @default("indonesian")
+  language      String    @default("portuguese")
   status        String    @default("draft")
   progress      Int       @default(0)
   error         String?

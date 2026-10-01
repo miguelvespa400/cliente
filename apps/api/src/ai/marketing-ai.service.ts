@@ -49,7 +49,13 @@ export class MarketingAiService {
 
   private async callOpenAI(input: GenerateContentInput): Promise<MarketingContent> {
     const model = this.config.get<string>("OPENAI_MODEL") || "gpt-4o-mini";
-    const isIndonesian = input.language === "indonesian";
+    const languageNames: Record<string, string> = {
+      portuguese: "Brazilian Portuguese (pt-BR)",
+      english: "English",
+      spanish: "Spanish",
+      indonesian: "Indonesian (Bahasa Indonesia)",
+    };
+    const languageName = languageNames[input.language] || languageNames.portuguese;
     const styleCues: Record<string, string> = {
       professional: "formal, professional, direct",
       friendly: "warm, friendly, approachable",
@@ -67,7 +73,7 @@ Rating: ${input.rating || "unknown"} stars
 Has Website: ${input.hasWebsite ? "yes" : "no"}
 Your Service/Product: ${input.yourService}
 Tone: ${style}
-Language: ${isIndonesian ? "Indonesian (Bahasa Indonesia)" : "English"}
+Language: ${languageName} — write ALL content in this language
 AI Score: ${input.score}/100
 
 Generate: email (subject + body, 100-150 words), WhatsApp (50-80 words, can use emoji), Instagram DM (40-60 words), LinkedIn connection note (under 280 chars), cold call opening (2-3 sentences).
@@ -98,6 +104,34 @@ Respond ONLY with valid JSON:
     const service = input.yourService;
     const ratingTag = input.rating ? ` dengan rating ${input.rating} bintang` : "";
     const ratingTagEn = input.rating ? ` with a ${input.rating}-star rating` : "";
+
+    if (input.language === "portuguese" || !input.language) {
+      const ratingTagPt = input.rating ? ` com avaliação ${input.rating}⭐` : "";
+      return {
+        email: {
+          subject: `${name}: mais clientes com ${service}`,
+          body: `Olá, equipe ${name}!\n\nConheci o trabalho de vocês${input.rating ? ` e vi a avaliação de ${input.rating} estrelas no Google` : ""} — parabéns!\n\nQueria mostrar como ${service} pode ajudar a ${name} a atrair mais clientes e crescer com mais previsibilidade.\n\nVocês teriam 15 minutos esta semana para uma conversa rápida?\n\nAbraço,\n[Seu nome]`,
+        },
+        whatsapp: `Olá, ${name}! 👋\n\nVi o perfil de vocês no Google${ratingTagPt} — muito bom!\n\nPosso mostrar em 2 minutos como ${service} pode ajudar a ${name} a crescer? 🚀`,
+        instagram: `Oi, ${name}! Curti muito o trabalho de vocês${ratingTagPt} 🔥 Tenho uma ideia de como ${service} pode trazer mais clientes para vocês. Posso te mandar? ✨`,
+        linkedin: { connectionNote: `Olá! Conheci a ${name} e gostaria de me conectar. Trabalho com ${service} e vejo um bom potencial de parceria.` },
+        coldCall: { opening: `Bom dia! Falo com o responsável pela ${name}? Meu nome é [Seu nome], trabalho com ${service} e queria mostrar rapidamente como podemos ajudar a ${name} a conquistar mais clientes.` },
+      };
+    }
+
+    if (input.language === "spanish") {
+      const ratingTagEs = input.rating ? ` con ${input.rating}⭐` : "";
+      return {
+        email: {
+          subject: `Haz crecer ${name} con ${service}`,
+          body: `Hola, equipo de ${name}:\n\nConocí su negocio${ratingTagEs} — ¡excelente trabajo!\n\nMe gustaría mostrarles cómo ${service} puede ayudar a ${name} a atraer más clientes.\n\n¿Tendrían 15 minutos para una breve llamada?\n\nSaludos,\n[Tu nombre]`,
+        },
+        whatsapp: `¡Hola, ${name}! 👋\n\nVi su negocio${ratingTagEs} — ¡muy bien!\n\n¿Les muestro cómo ${service} puede ayudarles a crecer? 🚀`,
+        instagram: `¡Hola, ${name}! Me encanta lo que hacen${ratingTagEs} 🔥 Creo que ${service} puede llevar su negocio al siguiente nivel. ✨`,
+        linkedin: { connectionNote: `Hola, conocí ${name} y me gustaría conectar. Trabajo con ${service} y veo gran potencial de colaboración.` },
+        coldCall: { opening: `Buenos días, ¿hablo con el responsable de ${name}? Quisiera contarle brevemente cómo ${service} puede ayudar a ${name} a crecer.` },
+      };
+    }
 
     if (isId) {
       return {

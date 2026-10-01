@@ -22,7 +22,7 @@ export class CampaignsService {
       where: { id, workspaceId },
       include: { _count: { select: { leads: true } } },
     });
-    if (!campaign) throw new NotFoundException(`Campaign ${id} not found`);
+    if (!campaign) throw new NotFoundException(`Campanha ${id} não encontrada`);
     return campaign;
   }
 
@@ -37,7 +37,7 @@ export class CampaignsService {
         ...dto,
         maxResults: dto.maxResults ?? 20,
         contentStyle: dto.contentStyle ?? "balanced",
-        language: dto.language ?? "indonesian",
+        language: dto.language ?? "portuguese",
         workspaceId,
       },
     });

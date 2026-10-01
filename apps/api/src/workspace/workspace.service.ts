@@ -7,7 +7,7 @@ export class WorkspaceService {
 
   async getWorkspace(workspaceId: string) {
     const workspace = await this.prisma.workspace.findUnique({ where: { id: workspaceId } });
-    if (!workspace) throw new NotFoundException("Workspace not found");
+    if (!workspace) throw new NotFoundException("Workspace não encontrado");
     return workspace;
   }
 
@@ -21,7 +21,7 @@ export class WorkspaceService {
     if (data.slug) {
       const existing = await this.prisma.workspace.findUnique({ where: { slug: data.slug } });
       if (existing && existing.id !== workspaceId) {
-        throw new ConflictException("Slug is already taken");
+        throw new ConflictException("Este identificador (slug) já está em uso");
       }
     }
 
@@ -46,12 +46,12 @@ export class WorkspaceService {
     await this.requireOwnerOrAdmin(workspaceId, requesterId);
 
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) throw new NotFoundException(`No user found with email ${email}`);
+    if (!user) throw new NotFoundException(`Nenhum usuário encontrado com o e-mail ${email}`);
 
     const existing = await this.prisma.workspaceMember.findUnique({
       where: { workspaceId_userId: { workspaceId, userId: user.id } },
     });
-    if (existing) throw new ConflictException("User is already a member of this workspace");
+    if (existing) throw new ConflictException("Este usuário já é membro deste workspace");
 
     return this.prisma.workspaceMember.create({
       data: { workspaceId, userId: user.id, role: role || "member" },
@@ -65,8 +65,8 @@ export class WorkspaceService {
     const member = await this.prisma.workspaceMember.findFirst({
       where: { id: memberId, workspaceId },
     });
-    if (!member) throw new NotFoundException("Member not found");
-    if (member.role === "owner") throw new ForbiddenException("Cannot change the owner's role");
+    if (!member) throw new NotFoundException("Membro não encontrado");
+    if (member.role === "owner") throw new ForbiddenException("Não é possível alterar a função do proprietário");
 
     return this.prisma.workspaceMember.update({
       where: { id: memberId },
@@ -81,8 +81,8 @@ export class WorkspaceService {
     const member = await this.prisma.workspaceMember.findFirst({
       where: { id: memberId, workspaceId },
     });
-    if (!member) throw new NotFoundException("Member not found");
-    if (member.role === "owner") throw new ForbiddenException("Cannot remove the workspace owner");
+    if (!member) throw new NotFoundException("Membro não encontrado");
+    if (member.role === "owner") throw new ForbiddenException("Não é possível remover o proprietário do workspace");
 
     return this.prisma.workspaceMember.delete({ where: { id: memberId } });
   }
@@ -92,7 +92,7 @@ export class WorkspaceService {
       where: { workspaceId_userId: { workspaceId, userId } },
     });
     if (!membership || !["owner", "admin"].includes(membership.role)) {
-      throw new ForbiddenException("Only workspace owners and admins can manage members");
+      throw new ForbiddenException("Apenas proprietários e administradores podem gerenciar membros");
     }
   }
 }

@@ -13,6 +13,8 @@ export interface ScrapedBusiness {
   lat: number | null;
   lng: number | null;
   source: string;
+  email?: string;
+  category?: string;
 }
 
 // Google Maps place URLs embed coordinates either as a precise place marker

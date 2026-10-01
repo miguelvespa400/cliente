@@ -20,62 +20,62 @@ const integrations = [
   {
     id: "whatsapp",
     name: "WhatsApp Business",
-    description: "Send WhatsApp messages directly to leads from Prospex. One-click outreach using AI-generated content.",
+    description: "Envie mensagens de WhatsApp diretamente para leads pelo Prospex. Abordagem com um clique usando conteúdo gerado por IA.",
     icon: MessageCircle,
     color: "text-emerald-500",
     bg: "bg-emerald-500/10",
     status: "coming_soon",
-    category: "Messaging",
+    category: "Mensagens",
   },
   {
     id: "gmail",
     name: "Gmail",
-    description: "Send emails to leads directly from Prospex using your Gmail account. Full tracking & follow-up.",
+    description: "Envie e-mails para leads diretamente pelo Prospex usando sua conta do Gmail. Rastreamento e follow-up completos.",
     icon: Mail,
     color: "text-red-500",
     bg: "bg-red-500/10",
     status: "coming_soon",
-    category: "Email",
+    category: "E-mail",
   },
   {
     id: "telegram",
     name: "Telegram",
-    description: "Get real-time notifications when campaigns complete or leads update their status.",
+    description: "Receba notificações em tempo real quando campanhas forem concluídas ou leads mudarem de status.",
     icon: Send,
     color: "text-blue-500",
     bg: "bg-blue-500/10",
     status: "coming_soon",
-    category: "Notifications",
+    category: "Notificações",
   },
   {
     id: "webhook",
     name: "Webhook",
-    description: "Send lead data to any HTTP endpoint. Connect to Zapier, n8n, Make, or your own backend.",
+    description: "Envie dados de leads para qualquer endpoint HTTP. Conecte ao Zapier, n8n, Make ou ao seu próprio backend.",
     icon: Webhook,
     color: "text-orange-500",
     bg: "bg-orange-500/10",
     status: "coming_soon",
-    category: "Automation",
+    category: "Automação",
   },
   {
     id: "zapier",
     name: "Zapier",
-    description: "Connect Prospex to 6,000+ apps. Automate lead follow-up, CRM sync, and more.",
+    description: "Conecte o Prospex a mais de 6.000 apps. Automatize o follow-up de leads, a sincronização com o CRM e muito mais.",
     icon: Zap,
     color: "text-amber-500",
     bg: "bg-amber-500/10",
     status: "coming_soon",
-    category: "Automation",
+    category: "Automação",
   },
   {
     id: "n8n",
     name: "n8n",
-    description: "Self-hosted automation workflows. Build powerful pipelines with Prospex leads.",
+    description: "Fluxos de automação auto-hospedados. Crie pipelines poderosos com os leads do Prospex.",
     icon: Plug,
     color: "text-purple-500",
     bg: "bg-purple-500/10",
     status: "coming_soon",
-    category: "Automation",
+    category: "Automação",
   },
 ];
 
@@ -86,12 +86,12 @@ export function IntegrationsPage() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Integrations</h1>
-          <p className="text-muted-foreground mt-1">Connect Prospex with your existing tools and workflows</p>
+          <h1 className="text-2xl font-bold tracking-tight">Integrações</h1>
+          <p className="text-muted-foreground mt-1">Conecte o Prospex às ferramentas e fluxos de trabalho que você já usa</p>
         </div>
         <Button asChild variant="outline">
           <Link href="/settings">
-            Configure AI Keys <ArrowRight className="ml-2 h-4 w-4" />
+            Configurar chaves de IA <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
       </div>
@@ -103,19 +103,19 @@ export function IntegrationsPage() {
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">Use the Prospex REST API</p>
+            <p className="text-sm font-medium">Use a API REST do Prospex</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Access all your leads and campaigns programmatically. Generate API keys in Settings.
+              Acesse todos os seus leads e campanhas via código. Gere chaves de API em Configurações.
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <Button size="sm" variant="outline" asChild>
               <a href={`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api").replace(/\/api\/?$/, "")}/api/docs`} target="_blank" rel="noreferrer">
-                Swagger Docs
+                Documentação Swagger
               </a>
             </Button>
             <Button size="sm" asChild variant="gradient">
-              <Link href="/settings">API Keys</Link>
+              <Link href="/settings">Chaves de API</Link>
             </Button>
           </div>
         </CardContent>
@@ -148,7 +148,7 @@ export function IntegrationsPage() {
                           </div>
                         </div>
                         <Badge variant="secondary" className="text-[10px] flex-shrink-0">
-                          Coming Soon
+                          Em breve
                         </Badge>
                       </div>
                     </CardHeader>
@@ -165,14 +165,14 @@ export function IntegrationsPage() {
       ))}
 
       <p className="text-xs text-muted-foreground text-center pt-4">
-        Want an integration?{" "}
+        Quer uma integração?{" "}
         <a
           href="https://github.com/asiifdev/business-leads-ai-automation/issues"
           target="_blank"
           rel="noreferrer"
           className="text-primary hover:underline"
         >
-          Request it on GitHub
+          Solicite no GitHub
         </a>
       </p>
     </div>

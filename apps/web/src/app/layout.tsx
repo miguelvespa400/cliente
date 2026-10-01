@@ -7,8 +7,8 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Prospex — AI-Powered GTM Automation",
-  description: "Find leads, generate personalized outreach, and close deals — all powered by AI.",
+  title: "Prospex — Prospecção automatizada com IA",
+  description: "Encontre leads, gere abordagens personalizadas e feche negócios — tudo com IA.",
 };
 
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}

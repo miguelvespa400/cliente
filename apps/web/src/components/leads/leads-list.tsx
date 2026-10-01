@@ -34,37 +34,37 @@ export function LeadsList() {
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search leads..."
+            placeholder="Buscar leads..."
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
             className="pl-8"
           />
         </div>
         <Select value={priority} onValueChange={setPriority}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
+          <SelectTrigger className="w-36"><SelectValue placeholder="Prioridade" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All priorities</SelectItem>
-            <SelectItem value="HIGH">High</SelectItem>
-            <SelectItem value="MEDIUM">Medium</SelectItem>
-            <SelectItem value="LOW">Low</SelectItem>
+            <SelectItem value="all">Todas as prioridades</SelectItem>
+            <SelectItem value="HIGH">Alta</SelectItem>
+            <SelectItem value="MEDIUM">Média</SelectItem>
+            <SelectItem value="LOW">Baixa</SelectItem>
           </SelectContent>
         </Select>
         <Select value={crmStatus} onValueChange={setCrmStatus}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="CRM Status" /></SelectTrigger>
+          <SelectTrigger className="w-36"><SelectValue placeholder="Status no CRM" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="new">New</SelectItem>
-            <SelectItem value="contacted">Contacted</SelectItem>
-            <SelectItem value="replied">Replied</SelectItem>
-            <SelectItem value="meeting">Meeting</SelectItem>
-            <SelectItem value="won">Won</SelectItem>
-            <SelectItem value="lost">Lost</SelectItem>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="new">Novo</SelectItem>
+            <SelectItem value="contacted">Contatado</SelectItem>
+            <SelectItem value="replied">Respondeu</SelectItem>
+            <SelectItem value="meeting">Reunião</SelectItem>
+            <SelectItem value="won">Ganho</SelectItem>
+            <SelectItem value="lost">Perdido</SelectItem>
           </SelectContent>
         </Select>
         <div className="ml-auto flex items-center gap-2">
-          {!loading && <span className="text-xs text-muted-foreground">{total} leads</span>}
+          {!loading && <span className="text-xs text-muted-foreground">{total.toLocaleString("pt-BR")} leads</span>}
           <Button variant="outline" onClick={() => api.download("/export/leads/csv", "leads-all.csv")}>
-            <Download className="mr-2 h-4 w-4" />Export CSV
+            <Download className="mr-2 h-4 w-4" />Exportar CSV
           </Button>
         </div>
       </div>

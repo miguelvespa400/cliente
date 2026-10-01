@@ -17,18 +17,23 @@ export class ExportService {
 
   toCsv(leads: Awaited<ReturnType<typeof this.getLeads>>): string {
     const headers = [
-      "Name", "Address", "Phone", "Website", "Rating", "Review Count", "Score", "Priority",
-      "CRM Status", "Campaign", "Has Website", "Scraped At",
+      "Nome", "Endereço", "Telefone", "Site", "Avaliação", "Nº de avaliações", "Pontuação", "Prioridade",
+      "Status no CRM", "Campanha", "Tem site", "Coletado em",
     ];
+    const priorityPt: Record<string, string> = { HIGH: "Alta", MEDIUM: "Média", LOW: "Baixa" };
+    const crmStatusPt: Record<string, string> = {
+      new: "Novo", contacted: "Contatado", replied: "Respondeu", meeting: "Reunião", proposal: "Proposta", won: "Ganho", lost: "Perdido",
+    };
     const escape = (v: unknown) => {
       const s = v == null ? "" : String(v);
       return s.includes(",") || s.includes('"') || s.includes("\n")
         ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const rows = leads.map((l) => [
-      l.name, l.address, l.phone, l.website, l.rating, l.reviewCount, l.score, l.priority,
-      l.crmStatus, l.campaign?.name ?? "", l.hasWebsite ? "Yes" : "No",
-      new Date(l.scrapedAt).toISOString(),
+      l.name, l.address, l.phone, l.website, l.rating, l.reviewCount, l.score,
+      priorityPt[l.priority] ?? l.priority, crmStatusPt[l.crmStatus] ?? l.crmStatus,
+      l.campaign?.name ?? "", l.hasWebsite ? "Sim" : "Não",
+      new Date(l.scrapedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
     ].map(escape).join(","));
     return [headers.join(","), ...rows].join("\n");
   }
@@ -67,7 +72,7 @@ export class ExportService {
           l.email ? `EMAIL;TYPE=WORK:${l.email}` : null,
           l.address ? `ADR;TYPE=WORK:;;${l.address};;;;` : null,
           l.website ? `URL:${l.website.startsWith("http") ? l.website : `https://${l.website}`}` : null,
-          `NOTE:Score: ${l.score} | Priority: ${l.priority} | CRM: ${l.crmStatus}`,
+          `NOTE:Pontuação: ${l.score} | Prioridade: ${l.priority} | CRM: ${l.crmStatus}`,
           "END:VCARD",
         ];
         return lines.filter(Boolean).join("\r\n");
