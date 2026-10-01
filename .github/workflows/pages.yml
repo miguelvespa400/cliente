@@ -27,6 +27,8 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - id: pages
+        uses: actions/configure-pages@v5
       - run: pnpm install --frozen-lockfile --filter @prospex/marketing... --filter @prospex/web...
       - name: Build site de apresentação (/<repo>/)
         run: pnpm --filter @prospex/marketing build
@@ -34,7 +36,8 @@ jobs:
           STATIC_EXPORT: "true"
           BASE_PATH: /${{ github.event.repository.name }}
           NEXT_PUBLIC_REPO_URL: ${{ github.server_url }}/${{ github.repository }}
-          NEXT_PUBLIC_SIGNUP_URL: /${{ github.event.repository.name }}/app/
+          # URL absoluta: o <Link> do Next prefixaria o basePath num caminho relativo.
+          NEXT_PUBLIC_SIGNUP_URL: ${{ steps.pages.outputs.base_url }}/app/
       # Painel em modo demonstração: dados fictícios, sem API/banco (lib/demo.ts).
       - name: Build demo do painel (/<repo>/app/)
         run: |
