@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { IS_DEMO, ensureDemoSession } from "@/lib/demo";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
+    // Na demonstração o visitante entra direto, sem tela de login.
+    if (IS_DEMO) ensureDemoSession();
     const token = localStorage.getItem("prospex_token");
     if (!token) {
       router.replace("/login");

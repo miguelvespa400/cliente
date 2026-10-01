@@ -7,7 +7,6 @@ import { LeadsService } from "../leads/leads.service";
 import { LeadIntelligenceService } from "../ai/lead-intelligence.service";
 import { MarketingAiService } from "../ai/marketing-ai.service";
 import { GoogleMapsScraperService, type ScrapedBusiness } from "./google-maps.scraper";
-import { GosomScraperService } from "./gosom.scraper";
 
 export interface ScraperJobData {
   campaignId: string;
@@ -32,7 +31,6 @@ export class ScraperProcessor extends WorkerHost {
     private leadIntelligence: LeadIntelligenceService,
     private marketingAi: MarketingAiService,
     private googleMaps: GoogleMapsScraperService,
-    private gosom: GosomScraperService,
     private config: ConfigService,
   ) {
     super();
@@ -145,10 +143,7 @@ export class ScraperProcessor extends WorkerHost {
       }));
     if (combos.length === 0) combos.push({ query: `${data.industry} ${area}`.trim(), area });
 
-    const results =
-      this.config.get<string>("SCRAPER_PROVIDER", "gosom") === "gosom"
-        ? await this.scrapeWithGosom(data, campaignId, combos)
-        : await this.scrapeWithPlaywright(data, campaignId, combos);
+    const results = await this.scrapeWithPlaywright(data, campaignId, combos);
 
     // Deduplicate by name+address
     const seen = new Set<string>();
@@ -160,29 +155,6 @@ export class ScraperProcessor extends WorkerHost {
         return true;
       })
       .slice(0, data.maxResults);
-  }
-
-  private async scrapeWithGosom(
-    data: ScraperJobData,
-    campaignId: string,
-    combos: { query: string; area: string }[],
-  ) {
-    try {
-      const raw = await this.gosom.scrape(
-        combos.map((c) => c.query),
-        {
-          language: data.language,
-          maxResults: Math.ceil(data.maxResults / combos.length),
-          onProgress: async (f) => {
-            await this.campaigns.updateStatus(campaignId, "running", Math.round(f * 28));
-          },
-        },
-      );
-      this.logger.log(`gosom: ${raw.length} resultados para ${combos.length} buscas`);
-      return raw.map((b) => this.normalizeRaw(b, data.industry));
-    } catch (err) {
-      return this.handleScrapeFailure(data, combos, err);
-    }
   }
 
   private async scrapeWithPlaywright(

@@ -16,8 +16,9 @@
 >
 > Versão do **Prospex** adaptada pela Netwish: interface do painel, mensagens de erro, exportação CSV e conteúdo gerado por IA **traduzidos para português (pt-BR)**, com idioma padrão das campanhas em português.
 >
-> - **Site de apresentação (GitHub Pages):** veja o link em *About* → *Website*, ao lado deste repositório.
-> - **Painel completo** (busca de leads no Google Maps, pontuação com IA, mensagens prontas e CRM): precisa de API + PostgreSQL + Redis, então **não roda no GitHub Pages**. Para rodar localmente, siga o *Quick Start* abaixo.
+> - **Site de apresentação:** https://miguelvespa400.github.io/cliente/
+> - **Demonstração navegável do painel:** https://miguelvespa400.github.io/cliente/app/ — entra direto, sem senha, com dados **fictícios**. Dá para abrir campanhas, leads, mensagens da IA, mudar status no CRM e simular uma campanha nova.
+> - **Painel real** (busca de verdade no Google Maps e IA): precisa de API + PostgreSQL + Redis, então roda localmente ou num servidor — siga o *Quick Start* abaixo.
 > - Projeto original: [asiifdev/business-leads-ai-automation](https://github.com/asiifdev/business-leads-ai-automation), licença MIT.
 
 ## What is Prospex?

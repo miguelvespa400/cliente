@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { BASE_PATH, DEMO_SESSION, IS_DEMO } from "@/lib/demo";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 const TOKEN_KEY = "prospex_token";
@@ -42,6 +43,7 @@ export function useAuth() {
   useEffect(() => { load(); }, [load]);
 
   const login = async (email: string, password: string) => {
+    if (IS_DEMO) return demoLogin({ ...DEMO_SESSION.user, email: email || DEMO_SESSION.user.email });
     const res = await fetch(`${API}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -60,6 +62,7 @@ export function useAuth() {
   };
 
   const register = async (name: string, email: string, password: string, workspaceName: string) => {
+    if (IS_DEMO) return demoLogin({ ...DEMO_SESSION.user, name: name || DEMO_SESSION.user.name, email: email || DEMO_SESSION.user.email });
     const res = await fetch(`${API}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -80,7 +83,7 @@ export function useAuth() {
   const logout = () => {
     const token = localStorage.getItem(TOKEN_KEY);
     // Fire-and-forget server-side logout (no-op for stateless JWT, but good practice)
-    if (token) {
+    if (token && !IS_DEMO) {
       fetch(`${API}/auth/logout`, { method: "POST", headers: { Authorization: `Bearer ${token}` } })
         .catch(() => undefined);
     }
@@ -88,8 +91,17 @@ export function useAuth() {
     localStorage.removeItem(USER_KEY);
     setUser(null);
     setWorkspace(null);
-    window.location.href = "/login";
+    window.location.href = `${BASE_PATH}/login`;
   };
+
+  function demoLogin(u: AuthUser) {
+    const data = { token: DEMO_SESSION.token, user: u, workspace: DEMO_SESSION.workspace };
+    localStorage.setItem(TOKEN_KEY, data.token);
+    localStorage.setItem(USER_KEY, JSON.stringify({ user: data.user, workspace: data.workspace }));
+    setUser(data.user);
+    setWorkspace(data.workspace);
+    return data;
+  }
 
   return { user, workspace, loading, login, register, logout };
 }

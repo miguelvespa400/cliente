@@ -13,6 +13,10 @@ export interface LeadFilter {
   limit?: number;
 }
 
+const CRM_STATUS_PT: Record<string, string> = {
+  new: "Novo", contacted: "Contatado", replied: "Respondeu", meeting: "Reunião", proposal: "Proposta", won: "Ganho", lost: "Perdido",
+};
+
 @Injectable()
 export class LeadsService {
   constructor(private prisma: PrismaService) {}
@@ -75,7 +79,7 @@ export class LeadsService {
       data: {
         leadId: id,
         type: "crm_update",
-        note: `Status changed to ${dto.crmStatus}`,
+        note: `Status alterado para ${CRM_STATUS_PT[dto.crmStatus] ?? dto.crmStatus}`,
         metadata: dto as object,
       },
     });

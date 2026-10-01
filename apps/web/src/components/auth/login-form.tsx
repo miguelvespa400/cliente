@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,7 +87,7 @@ export function LoginForm() {
           </Button>
           <p className="text-sm text-slate-400 text-center">
             Não tem uma conta?{" "}
-            <a href="/register" className="text-primary hover:text-primary/80">Criar conta</a>
+            <Link href="/register" className="text-primary hover:text-primary/80">Criar conta</Link>
           </p>
         </CardFooter>
       </form>

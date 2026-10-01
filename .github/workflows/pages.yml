@@ -1,7 +1,8 @@
 name: Deploy site (GitHub Pages)
 
-# Publica o site de apresentação (apps/marketing) como site estático no GitHub Pages.
-# O dashboard (apps/web) precisa de API + PostgreSQL + Redis e não roda no Pages.
+# Publica no GitHub Pages: site de apresentação (apps/marketing) em /<repo>/ e o painel
+# (apps/web) em modo demonstração em /<repo>/app/. O painel real precisa de API + PostgreSQL
+# + Redis; a demo responde no navegador com dados fictícios.
 on:
   push:
     branches: [main]
@@ -26,15 +27,26 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile --filter @prospex/marketing...
-      - name: Build static site
+      - run: pnpm install --frozen-lockfile --filter @prospex/marketing... --filter @prospex/web...
+      - name: Build site de apresentação (/<repo>/)
         run: pnpm --filter @prospex/marketing build
         env:
           STATIC_EXPORT: "true"
           BASE_PATH: /${{ github.event.repository.name }}
           NEXT_PUBLIC_REPO_URL: ${{ github.server_url }}/${{ github.repository }}
-          NEXT_PUBLIC_SIGNUP_URL: ${{ github.server_url }}/${{ github.repository }}#readme
-      - run: touch apps/marketing/out/.nojekyll
+          NEXT_PUBLIC_SIGNUP_URL: /${{ github.event.repository.name }}/app/
+      # Painel em modo demonstração: dados fictícios, sem API/banco (lib/demo.ts).
+      - name: Build demo do painel (/<repo>/app/)
+        run: |
+          pnpm --filter @prospex/web build
+          node apps/web/scripts/flatten-rsc.mjs apps/web/out
+        env:
+          STATIC_EXPORT: "true"
+          NEXT_PUBLIC_DEMO_MODE: "true"
+          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}/app
+      - run: |
+          cp -r apps/web/out apps/marketing/out/app
+          touch apps/marketing/out/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
           path: apps/marketing/out

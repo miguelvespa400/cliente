@@ -1,3 +1,5 @@
+import { BASE_PATH, IS_DEMO, demoDownload, demoRequest } from "./demo";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 function getToken(): string | null {
@@ -6,6 +8,9 @@ function getToken(): string | null {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  if (IS_DEMO) {
+    return demoRequest<T>(options?.method ?? "GET", path, options?.body ? JSON.parse(String(options.body)) : undefined);
+  }
   const token = getToken();
   const res = await fetch(`${API_URL}${path}`, {
     headers: {
@@ -20,7 +25,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     if (typeof window !== "undefined") {
       localStorage.removeItem("prospex_token");
       localStorage.removeItem("prospex_user");
-      window.location.href = "/login";
+      window.location.href = `${BASE_PATH}/login`;
     }
     throw new Error("Não autorizado");
   }
@@ -42,6 +47,7 @@ export const api = {
 
   /** Fetch a file with auth header and trigger browser download */
   async download(path: string, filename: string): Promise<void> {
+    if (IS_DEMO) return demoDownload(path, filename);
     const token = getToken();
     const res = await fetch(`${API_URL}${path}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -49,7 +55,7 @@ export const api = {
     if (res.status === 401) {
       localStorage.removeItem("prospex_token");
       localStorage.removeItem("prospex_user");
-      window.location.href = "/login";
+      window.location.href = `${BASE_PATH}/login`;
       return;
     }
     if (!res.ok) throw new Error(`Falha no download: HTTP ${res.status}`);
