@@ -7,9 +7,11 @@ import { LeadsService } from "../leads/leads.service";
 import { LeadIntelligenceService } from "../ai/lead-intelligence.service";
 import { MarketingAiService } from "../ai/marketing-ai.service";
 import { GoogleMapsScraperService, type ScrapedBusiness } from "./google-maps.scraper";
+import { NotifierService } from "../integrations/notifier.service";
 
 export interface ScraperJobData {
   campaignId: string;
+  campaignName?: string;
   workspaceId: string;
   searchQueries: string[];
   industry: string;
@@ -32,6 +34,7 @@ export class ScraperProcessor extends WorkerHost {
     private marketingAi: MarketingAiService,
     private googleMaps: GoogleMapsScraperService,
     private config: ConfigService,
+    private notifier: NotifierService,
   ) {
     super();
   }
@@ -48,7 +51,9 @@ export class ScraperProcessor extends WorkerHost {
       const total = rawLeads.length;
 
       if (total === 0) {
-        await this.campaigns.updateStatus(campaignId, "failed", 0, "No leads found");
+        const msg = "Nenhuma empresa encontrada para essas buscas";
+        await this.campaigns.updateStatus(campaignId, "failed", 0, msg);
+        void this.notifier.emit(workspaceId, "campaign.failed", { campaign: { id: campaignId, name: data.campaignName }, error: msg });
         return;
       }
 
@@ -121,10 +126,17 @@ export class ScraperProcessor extends WorkerHost {
       });
 
       await this.campaigns.updateStatus(campaignId, "completed", 100);
+      // Zapier/n8n/Make recebem os leads completos; Telegram recebe o resumo.
+      void this.notifier.emit(workspaceId, "campaign.completed", {
+        campaign: { id: campaignId, name: data.campaignName, industry: data.industry, location: data.location },
+        stats: { totalLeads: total, priorityLeads: priority, highQualityLeads: highQuality, averageScore: avgScore },
+        leads: processedLeads.map(({ marketingContent: _m, aiAnalysis: _a, campaignId: _c, workspaceId: _w, ...l }) => l),
+      });
       this.logger.log(`Campaign ${campaignId} done: ${total} leads, ${priority} priority`);
     } catch (err) {
       this.logger.error(`Campaign ${campaignId} failed: ${err}`);
       await this.campaigns.updateStatus(campaignId, "failed", undefined, String(err));
+      void this.notifier.emit(workspaceId, "campaign.failed", { campaign: { id: campaignId, name: data.campaignName }, error: String(err) });
       throw err; // re-throw so BullMQ can retry if configured
     }
   }

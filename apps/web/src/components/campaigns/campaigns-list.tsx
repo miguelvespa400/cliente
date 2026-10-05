@@ -136,7 +136,7 @@ export function CampaignsList() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link href={`/campaigns/${c.id}`}><Eye className="w-3.5 h-3.5 mr-1" />Ver detalhes</Link>
+                            <Link href={`/campaigns/detalhe?id=${c.id}`}><Eye className="w-3.5 h-3.5 mr-1" />Ver detalhes</Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => api.download(`/export/leads/csv?campaignId=${c.id}`, `leads-${c.id}.csv`)}>
                             <Download className="w-3.5 h-3.5 mr-1" />Exportar leads (CSV)
@@ -144,7 +144,7 @@ export function CampaignsList() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                       <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                        <Link href={`/campaigns/${c.id}`}><ChevronRight className="h-4 w-4" /></Link>
+                        <Link href={`/campaigns/detalhe?id=${c.id}`}><ChevronRight className="h-4 w-4" /></Link>
                       </Button>
                     </div>
                   </div>

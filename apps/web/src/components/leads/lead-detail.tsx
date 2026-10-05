@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Phone, Globe, MapPin, Star, Mail, MessageCircle, Loader2, Copy, Instagram } from "lucide-react";
+import { ArrowLeft, Phone, Globe, MapPin, Star, Mail, MessageCircle, Loader2, Copy, Instagram, Send } from "lucide-react";
+import { gmailComposeUrl, whatsappUrl } from "@/lib/outreach";
 import { useLead } from "@/hooks/use-leads";
+import { WhatsAppSendDialog } from "@/components/leads/whatsapp-send-dialog";
 import { api } from "@/lib/api";
 import { ACTIVITY_TYPE_LABELS, INDUSTRY_LABELS, labelFor } from "@/lib/labels";
 
@@ -26,6 +28,19 @@ export function LeadDetail({ id }: { id: string }) {
   const { lead, loading, refresh } = useLead(id);
   const [crmStatus, setCrmStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // WhatsApp Cloud API conectado em Integrações? Se não, o botão abre o wa.me com a mensagem pronta.
+  const [waConfig, setWaConfig] = useState<Record<string, string> | null>(null);
+  const [waOpen, setWaOpen] = useState(false);
+
+  useEffect(() => {
+    api
+      .get<Array<{ type: string; config: Record<string, string> }>>("/settings/integrations")
+      .then((list) => {
+        const cfg = list.find((i) => i.type === "whatsapp")?.config;
+        setWaConfig(cfg?.accessToken && cfg?.phoneNumberId ? cfg : null);
+      })
+      .catch(() => setWaConfig(null));
+  }, []);
 
   const handleCrmUpdate = async () => {
     if (!crmStatus || !lead) return;
@@ -157,6 +172,15 @@ export function LeadDetail({ id }: { id: string }) {
                       <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs opacity-60 hover:opacity-100" onClick={() => navigator.clipboard.writeText(lead.marketingContent!.email!.body)}>
                         Copiar
                       </Button>
+                      <Button size="sm" variant="outline" className="h-6 text-xs" asChild>
+                        <a
+                          href={gmailComposeUrl(lead.email, lead.marketingContent.email.subject, lead.marketingContent.email.body)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <Send className="w-3 h-3 mr-1" />Abrir no Gmail
+                        </a>
+                      </Button>
                     </div>
                     <div className="bg-muted/50 rounded-lg p-3 text-xs leading-relaxed">
                       <p className="font-medium text-muted-foreground mb-1.5">Assunto: {lead.marketingContent.email.subject}</p>
@@ -174,6 +198,17 @@ export function LeadDetail({ id }: { id: string }) {
                         <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs opacity-60 hover:opacity-100" onClick={() => navigator.clipboard.writeText(lead.marketingContent!.whatsapp!)}>
                           Copiar
                         </Button>
+                        {waConfig && lead.phone ? (
+                          <Button size="sm" className="h-6 text-xs bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setWaOpen(true)}>
+                            <MessageCircle className="w-3 h-3 mr-1" />Enviar pelo WhatsApp
+                          </Button>
+                        ) : whatsappUrl(lead.phone, lead.marketingContent.whatsapp) && (
+                          <Button size="sm" className="h-6 text-xs bg-emerald-600 hover:bg-emerald-700 text-white" asChild>
+                            <a href={whatsappUrl(lead.phone, lead.marketingContent.whatsapp)!} target="_blank" rel="noreferrer">
+                              <MessageCircle className="w-3 h-3 mr-1" />Enviar pelo WhatsApp
+                            </a>
+                          </Button>
+                        )}
                       </div>
                       <div className="bg-muted/50 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap">
                         {lead.marketingContent.whatsapp}
@@ -255,6 +290,18 @@ export function LeadDetail({ id }: { id: string }) {
           </Card>
         </motion.div>
       </div>
+
+      {waOpen && lead.phone && (
+        <WhatsAppSendDialog
+          leadId={lead.id}
+          leadName={lead.name}
+          phone={lead.phone}
+          message={lead.marketingContent?.whatsapp ?? ""}
+          templateName={waConfig?.templateName}
+          onClose={() => setWaOpen(false)}
+          onSent={refresh}
+        />
+      )}
     </motion.div>
   );
 }

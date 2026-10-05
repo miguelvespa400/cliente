@@ -171,7 +171,7 @@ export function DashboardOverview() {
                 {recent.map((c) => (
                   <Link
                     key={c.id}
-                    href={`/campaigns/${c.id}`}
+                    href={`/campaigns/detalhe?id=${c.id}`}
                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="w-8 h-8 bg-gradient-brand rounded-lg flex items-center justify-center flex-shrink-0">

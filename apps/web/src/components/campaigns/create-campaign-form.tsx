@@ -63,7 +63,7 @@ export function CreateCampaignForm() {
         language: form.language,
       });
       await api.post(`/scraper/campaigns/${campaign.id}/start`, {});
-      router.push(`/campaigns/${campaign.id}`);
+      router.push(`/campaigns/detalhe?id=${campaign.id}`);
     } catch (err) {
       console.error("Failed to create campaign:", err);
       setLoading(false);

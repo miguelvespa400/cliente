@@ -49,16 +49,17 @@ export class GoogleMapsScraperService {
 
   async scrape(searchQuery: string, maxResults = 20): Promise<ScrapedBusiness[]> {
     const browser = await this.getBrowser();
-    const page = await browser.newPage();
-
-    await page.setExtraHTTPHeaders({
-      "User-Agent":
+    // Contexto em pt-BR: rótulos e formatos (telefone, nota "4,6") ficam previsíveis.
+    const context = await browser.newContext({
+      locale: "pt-BR",
+      viewport: { width: 1280, height: 800 },
+      userAgent:
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     });
-    await page.setViewportSize({ width: 1280, height: 800 });
+    const page = await context.newPage();
 
     try {
-      await page.goto("https://www.google.com/maps/", {
+      await page.goto("https://www.google.com/maps/?hl=pt-BR", {
         waitUntil: "domcontentloaded",
         timeout: 60000,
       });
@@ -83,16 +84,69 @@ export class GoogleMapsScraperService {
 
       await this.scrollResultsList(page, maxResults);
 
-      const businesses = await this.extractBusinessCards(page);
+      const businesses = (await this.extractBusinessCards(page)).slice(0, maxResults);
       this.logger.log(`Extracted ${businesses.length} businesses from Google Maps`);
 
-      await page.close();
-      return businesses.slice(0, maxResults);
+      // O card da lista não traz telefone/site/endereço: abre a ficha de cada empresa.
+      for (const b of businesses) {
+        if (!b.referenceLink) continue;
+        try {
+          Object.assign(b, await this.extractPlaceDetails(page, b.referenceLink));
+        } catch (err) {
+          this.logger.warn(`Detalhes indisponíveis para "${b.name}": ${err}`);
+        }
+      }
+
+      await context.close();
+      return businesses;
     } catch (err) {
       this.logger.error(`Google Maps scraping error: ${err}`);
-      await page.close();
+      await context.close();
       return [];
     }
+  }
+
+  // Ficha da empresa: os botões têm data-item-id estáveis ("address", "phone:tel:...",
+  // "authority" = site), independentes do idioma da interface.
+  private async extractPlaceDetails(page: Page, url: string): Promise<Partial<ScrapedBusiness>> {
+    await page.goto(url.includes("hl=") ? url : `${url}${url.includes("?") ? "&" : "?"}hl=pt-BR`, {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
+    await page.waitForSelector('h1, [data-item-id="address"]', { timeout: 10000 }).catch(() => undefined);
+    await page.waitForTimeout(800);
+
+    const d = await page.evaluate(() => {
+      const text = (el: Element | null) => (el?.textContent ?? "").trim();
+      const labelValue = (el: Element | null) => {
+        const aria = el?.getAttribute("aria-label") ?? "";
+        return aria.includes(":") ? aria.slice(aria.indexOf(":") + 1).trim() : text(el);
+      };
+      const phoneEl = document.querySelector('[data-item-id^="phone:tel:"]');
+      const site = document.querySelector('a[data-item-id="authority"]') as HTMLAnchorElement | null;
+      const ratingBox = document.querySelector(".F7nice");
+      const reviewsAria = ratingBox?.querySelector('[aria-label*="avalia" i], [aria-label*="review" i]')?.getAttribute("aria-label") ?? "";
+      return {
+        address: labelValue(document.querySelector('[data-item-id="address"]')),
+        phone: labelValue(phoneEl) || (phoneEl?.getAttribute("data-item-id") ?? "").replace("phone:tel:", ""),
+        website: site?.href ?? "",
+        category: text(document.querySelector("button.DkEaL")),
+        rating: text(ratingBox?.querySelector('span[aria-hidden="true"]') ?? null),
+        reviews: reviewsAria,
+      };
+    });
+
+    const reviewCount = parseInt(d.reviews.replace(/\D/g, ""), 10);
+    const rating = d.rating.replace(",", ".");
+    return {
+      ...(d.address && { address: d.address }),
+      ...(d.phone && { phone: d.phone }),
+      ...(d.website && { website: d.website, hasWebsite: !/instagram\.com|facebook\.com|wa\.me|linktr\.ee|bio\.site/i.test(d.website) }),
+      ...(d.category && { category: d.category }),
+      ...(/^\d(\.\d)?$/.test(rating) && { rating }),
+      ...(Number.isFinite(reviewCount) && reviewCount > 0 && { reviewCount }),
+      ...extractLatLng(page.url()),
+    };
   }
 
   private async scrollResultsList(page: Page, maxResults: number): Promise<void> {
@@ -154,16 +208,16 @@ export class GoogleMapsScraperService {
             // parse both the star value and the review count from it when present.
             let rating = "";
             let reviewCount: number | null = null;
-            const ratingWrap = card.querySelector('[aria-label*="star" i]');
+            const ratingWrap = card.querySelector('[aria-label*="star" i], [aria-label*="estrela" i]');
             const ariaLabel = ratingWrap?.getAttribute("aria-label") ?? "";
-            const ratingMatch = ariaLabel.match(/([\d.]+)\s*star/i);
-            const reviewMatch = ariaLabel.match(/([\d.,]+)\s*review/i);
-            if (ratingMatch) rating = ratingMatch[1];
+            const ratingMatch = ariaLabel.match(/([\d.,]+)\s*(?:star|estrela)/i);
+            const reviewMatch = ariaLabel.match(/([\d.,]+)\s*(?:review|avalia|coment)/i);
+            if (ratingMatch) rating = ratingMatch[1].replace(",", ".");
             if (reviewMatch) reviewCount = parseInt(reviewMatch[1].replace(/[.,]/g, ""), 10);
 
             if (!rating) {
               const rEl = card.querySelector(".MW4etd");
-              if (rEl) rating = rEl.textContent?.trim() ?? "";
+              if (rEl) rating = (rEl.textContent?.trim() ?? "").replace(",", ".");
             }
 
             let address = "";
@@ -171,13 +225,12 @@ export class GoogleMapsScraperService {
             for (const span of card.querySelectorAll("span")) {
               const t = span.textContent?.trim() ?? "";
               if (!t || t.length < 3) continue;
-              if (!phone && /^[+\d]/.test(t) && t.replace(/\D/g, "").length >= 7) {
-                if (t.includes("+62") || t.includes("08") || /^\d{3}[\s-]\d/.test(t)) {
-                  phone = t;
-                  continue;
-                }
+              // Telefone brasileiro como aparece no card: "(41) 3343-1444" / "+55 41 99999-0000"
+              if (!phone && /^(\+55\s?)?\(?\d{2}\)?\s?9?\d{4}-?\d{4}$/.test(t)) {
+                phone = t;
+                continue;
               }
-              if (!address && /\bJl\.|\bJalan\b|\bStreet\b|\bSt\.|\bRd\.|\bNo\.\s*\d/i.test(t)) {
+              if (!address && /\b(R\.|Rua|Av\.|Avenida|Al\.|Alameda|Tv\.|Travessa|Rod\.|Praça|Estr\.)\s/i.test(t)) {
                 address = t.replace(/^[·•–]\s*/, "").trim();
               }
               if (reviewCount === null) {
@@ -198,7 +251,7 @@ export class GoogleMapsScraperService {
             return {
               name,
               address,
-              phone: phone.replace(/\D/g, "").replace(/^62/, "0").replace(/^0+/, "0"),
+              phone,
               rating: rating || "N/A",
               reviewCount,
               website,

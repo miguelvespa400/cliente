@@ -112,7 +112,7 @@ export function LeadsMap({ leads }: Props) {
                   )}
                 </div>
                 <Link
-                  href={`/leads/${lead.id}`}
+                  href={`/leads/detalhe?id=${lead.id}`}
                   className="flex items-center gap-0.5 pt-1 text-xs font-medium text-primary hover:underline"
                 >
                   Ver detalhes<ChevronRight className="w-3 h-3" />

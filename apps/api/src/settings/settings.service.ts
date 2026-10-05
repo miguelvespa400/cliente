@@ -5,7 +5,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { encryptSecret, decryptSecret } from "./encryption.util";
 
 const DEFAULT_WORKSPACE_ID = "default-workspace";
-const SECRET_CONFIG_KEYS = ["apiKey"];
+const SECRET_CONFIG_KEYS = ["apiKey", "botToken", "secret", "accessToken"];
 // Segredos nunca voltam para o navegador: a tela recebe só os 4 últimos dígitos.
 const MASK_PREFIX = "••••••••";
 
@@ -49,12 +49,17 @@ export class SettingsService {
     });
   }
 
+  /** Config de uma integração com os segredos descriptografados — uso interno da API, nunca devolver ao navegador. */
+  async getIntegrationConfig(workspaceId: string, type: string): Promise<Record<string, string> | null> {
+    const integration = await this.prisma.integration.findFirst({ where: { workspaceId, type, enabled: true } });
+    if (!integration) return null;
+    return this.decryptConfig(integration.config as Record<string, string>);
+  }
+
   /** Config da OpenAI do workspace, com a chave descriptografada — uso interno da API. */
   async getOpenAiConfig(workspaceId: string): Promise<{ apiKey: string; model?: string; baseURL?: string } | null> {
-    const integration = await this.prisma.integration.findFirst({ where: { workspaceId, type: "openai", enabled: true } });
-    if (!integration) return null;
-    const config = this.decryptConfig(integration.config as Record<string, string>);
-    return config.apiKey ? { apiKey: config.apiKey, model: config.model || undefined, baseURL: config.baseURL || undefined } : null;
+    const config = await this.getIntegrationConfig(workspaceId, "openai");
+    return config?.apiKey ? { apiKey: config.apiKey, model: config.model || undefined, baseURL: config.baseURL || undefined } : null;
   }
 
   async upsertIntegration(

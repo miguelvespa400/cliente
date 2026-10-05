@@ -29,6 +29,7 @@ export class ScraperController {
       "scrape",
       {
         campaignId: campaign.id,
+        campaignName: campaign.name,
         workspaceId: campaign.workspaceId,
         searchQueries: campaign.searchQueries,
         industry: campaign.industry,

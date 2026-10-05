@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { NotifierService } from "../integrations/notifier.service";
 import { UpdateCrmDto } from "./dto/update-crm.dto";
 
 const DEFAULT_WORKSPACE_ID = "default-workspace";
@@ -19,7 +20,10 @@ const CRM_STATUS_PT: Record<string, string> = {
 
 @Injectable()
 export class LeadsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifier: NotifierService,
+  ) {}
 
   async findAll(workspaceId = DEFAULT_WORKSPACE_ID, filter: LeadFilter = {}) {
     const { campaignId, q, priority, status, page = 1, limit = 50 } = filter;
@@ -64,7 +68,7 @@ export class LeadsService {
   }
 
   async updateCrm(id: string, dto: UpdateCrmDto, workspaceId = DEFAULT_WORKSPACE_ID) {
-    await this.findOne(id, workspaceId);
+    const before = await this.findOne(id, workspaceId);
     const now = new Date();
     const lead = await this.prisma.lead.update({
       where: { id },
@@ -83,6 +87,14 @@ export class LeadsService {
         metadata: dto as object,
       },
     });
+    if (dto.crmStatus && dto.crmStatus !== before.crmStatus) {
+      // Não bloqueia a resposta: Webhook/Telegram recebem o aviso em segundo plano.
+      void this.notifier.emit(workspaceId, "lead.status_changed", {
+        lead: { id: lead.id, name: lead.name, phone: lead.phone, email: lead.email, website: lead.website, score: lead.score, priority: lead.priority },
+        from: before.crmStatus,
+        to: dto.crmStatus,
+      });
+    }
     return lead;
   }
 

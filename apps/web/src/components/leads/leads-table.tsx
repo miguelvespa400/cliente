@@ -109,7 +109,7 @@ export function LeadsTable({ leads, loading }: Props) {
               <div className="text-[10px] text-muted-foreground">Pontuação</div>
             </div>
             <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-              <Link href={`/leads/${lead.id}`} aria-label={`Ver detalhes de ${lead.name}`}><ChevronRight className="h-4 w-4" /></Link>
+              <Link href={`/leads/detalhe?id=${lead.id}`} aria-label={`Ver detalhes de ${lead.name}`}><ChevronRight className="h-4 w-4" /></Link>
             </Button>
           </div>
         </motion.div>
