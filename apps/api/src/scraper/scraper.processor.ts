@@ -72,7 +72,7 @@ export class ScraperProcessor extends WorkerHost {
                 contentStyle: data.contentStyle,
                 language: data.language,
                 score: lead.score,
-              });
+              }, workspaceId);
             } catch (e) {
               this.logger.warn(`Content gen failed for ${lead.name}: ${e}`);
             }

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import OpenAI from "openai";
+import { SettingsService } from "../settings/settings.service";
 
 export interface GenerateContentInput {
   businessName: string;
@@ -27,7 +28,10 @@ export class MarketingAiService {
   private readonly logger = new Logger(MarketingAiService.name);
   private openai: OpenAI | null = null;
 
-  constructor(private config: ConfigService) {
+  constructor(
+    private config: ConfigService,
+    private settings: SettingsService,
+  ) {
     const apiKey = this.config.get<string>("OPENAI_API_KEY");
     if (apiKey) {
       this.openai = new OpenAI({
@@ -37,18 +41,32 @@ export class MarketingAiService {
     }
   }
 
-  async generateContent(input: GenerateContentInput): Promise<MarketingContent> {
-    if (!this.openai) return this.generateMockContent(input);
+  // Prioridade: chave cadastrada em Configurações → Integrações (por workspace),
+  // depois OPENAI_API_KEY do servidor, e por fim o conteúdo-modelo (sem custo).
+  private async resolveClient(workspaceId?: string): Promise<{ client: OpenAI; model: string } | null> {
+    const ws = workspaceId ? await this.settings.getOpenAiConfig(workspaceId).catch(() => null) : null;
+    if (ws) {
+      return {
+        client: new OpenAI({ apiKey: ws.apiKey, baseURL: ws.baseURL }),
+        model: ws.model || this.config.get<string>("OPENAI_MODEL") || "gpt-4o-mini",
+      };
+    }
+    if (this.openai) return { client: this.openai, model: this.config.get<string>("OPENAI_MODEL") || "gpt-4o-mini" };
+    return null;
+  }
+
+  async generateContent(input: GenerateContentInput, workspaceId?: string): Promise<MarketingContent> {
+    const resolved = await this.resolveClient(workspaceId);
+    if (!resolved) return this.generateMockContent(input);
     try {
-      return await this.callOpenAI(input);
+      return await this.callOpenAI(input, resolved.client, resolved.model);
     } catch (err) {
       this.logger.error("OpenAI generation failed, using mock content", err);
       return this.generateMockContent(input);
     }
   }
 
-  private async callOpenAI(input: GenerateContentInput): Promise<MarketingContent> {
-    const model = this.config.get<string>("OPENAI_MODEL") || "gpt-4o-mini";
+  private async callOpenAI(input: GenerateContentInput, client: OpenAI, model: string): Promise<MarketingContent> {
     const languageNames: Record<string, string> = {
       portuguese: "Brazilian Portuguese (pt-BR)",
       english: "English",
@@ -89,7 +107,7 @@ Respond ONLY with valid JSON:
   "coldCall": { "opening": "..." }
 }`;
 
-    const response = await this.openai!.chat.completions.create({
+    const response = await client.chat.completions.create({
       model,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,

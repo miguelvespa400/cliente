@@ -6,6 +6,12 @@ import { encryptSecret, decryptSecret } from "./encryption.util";
 
 const DEFAULT_WORKSPACE_ID = "default-workspace";
 const SECRET_CONFIG_KEYS = ["apiKey"];
+// Segredos nunca voltam para o navegador: a tela recebe só os 4 últimos dígitos.
+const MASK_PREFIX = "••••••••";
+
+function maskSecret(value: string): string {
+  return value ? `${MASK_PREFIX}${value.slice(-4)}` : "";
+}
 
 @Injectable()
 export class SettingsService {
@@ -36,10 +42,19 @@ export class SettingsService {
 
   async getIntegrations(workspaceId = DEFAULT_WORKSPACE_ID) {
     const integrations = await this.prisma.integration.findMany({ where: { workspaceId } });
-    return integrations.map((integration) => ({
-      ...integration,
-      config: this.decryptConfig(integration.config as Record<string, string>),
-    }));
+    return integrations.map((integration) => {
+      const config = this.decryptConfig(integration.config as Record<string, string>);
+      for (const key of SECRET_CONFIG_KEYS) if (config[key]) config[key] = maskSecret(config[key]);
+      return { ...integration, config };
+    });
+  }
+
+  /** Config da OpenAI do workspace, com a chave descriptografada — uso interno da API. */
+  async getOpenAiConfig(workspaceId: string): Promise<{ apiKey: string; model?: string; baseURL?: string } | null> {
+    const integration = await this.prisma.integration.findFirst({ where: { workspaceId, type: "openai", enabled: true } });
+    if (!integration) return null;
+    const config = this.decryptConfig(integration.config as Record<string, string>);
+    return config.apiKey ? { apiKey: config.apiKey, model: config.model || undefined, baseURL: config.baseURL || undefined } : null;
   }
 
   async upsertIntegration(
@@ -48,8 +63,14 @@ export class SettingsService {
     config: Record<string, string>,
     workspaceId = DEFAULT_WORKSPACE_ID,
   ) {
-    const encryptedConfig = this.encryptConfig(config);
     const existing = await this.prisma.integration.findFirst({ where: { workspaceId, type } });
+    // A tela reenvia o valor mascarado quando a chave não foi alterada: mantém a salva.
+    const previous = (existing?.config ?? {}) as Record<string, string>;
+    const merged = { ...config };
+    for (const key of SECRET_CONFIG_KEYS) {
+      if (merged[key]?.startsWith(MASK_PREFIX)) merged[key] = previous[key] ? decryptSecret(previous[key], this.encryptionKey) : "";
+    }
+    const encryptedConfig = this.encryptConfig(merged);
     if (existing) {
       return this.prisma.integration.update({
         where: { id: existing.id },

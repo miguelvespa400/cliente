@@ -32,17 +32,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/node_modules ./node_modules
+# pnpm não faz hoist: as dependências da API ficam em apps/api/node_modules (symlinks para node_modules/.pnpm)
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/packages/database ./packages/database
+COPY --from=builder /app/packages/types ./packages/types
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-workspace.yaml ./
 
-# Install Playwright Chromium browser
-RUN pnpm --filter @prospex/api exec playwright install chromium
+# Chromium do Playwright num caminho fixo, legível pelo usuário sem privilégios
+# (sem isso ele vai para /root/.cache e o processo "prospex" não o encontra).
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN pnpm --filter @prospex/api exec playwright install chromium && chmod -R a+rX /ms-playwright
 
 RUN addgroup --system prospex && adduser --system --ingroup prospex prospex
 USER prospex
 
+# Aplica as migrations do Prisma antes de subir a API (cria/atualiza as tabelas).
 WORKDIR /app/apps/api
-CMD ["node", "dist/main"]
+CMD ["sh", "-c", "cd /app/packages/database && ./node_modules/.bin/prisma migrate deploy && cd /app/apps/api && exec node dist/main"]

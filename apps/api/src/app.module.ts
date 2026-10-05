@@ -33,6 +33,8 @@ import { WorkspaceModule } from "./workspace/workspace.module";
         THROTTLE_TTL_MS: Joi.number().default(60000),
         THROTTLE_LIMIT: Joi.number().default(60),
         AUTH_THROTTLE_LIMIT: Joi.number().default(10),
+        REGISTRATION_OPEN: Joi.string().valid("true", "false").default("true"),
+        REGISTRATION_ALLOWED_EMAILS: Joi.string().allow("").default(""),
         SCRAPER_MOCK_FALLBACK: Joi.string().valid("true", "false").default("false"),
       }),
       validationOptions: { abortEarly: true },

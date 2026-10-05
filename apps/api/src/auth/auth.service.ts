@@ -1,4 +1,5 @@
-import { Injectable, ConflictException, UnauthorizedException } from "@nestjs/common";
+import { Injectable, ConflictException, ForbiddenException, UnauthorizedException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../prisma/prisma.service";
@@ -10,9 +11,26 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private config: ConfigService,
   ) {}
 
+  // Em produção (REGISTRATION_OPEN=false) só entra o primeiro usuário (vira dono) e
+  // os e-mails convidados em REGISTRATION_ALLOWED_EMAILS — evita que estranhos usem o
+  // servidor e os créditos de IA pelo endereço público.
+  private async assertRegistrationAllowed(email: string) {
+    if (this.config.get<string>("REGISTRATION_OPEN", "true") === "true") return;
+    if ((await this.prisma.user.count()) === 0) return;
+    const allowed = this.config
+      .get<string>("REGISTRATION_ALLOWED_EMAILS", "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    if (allowed.includes(email.trim().toLowerCase())) return;
+    throw new ForbiddenException("Cadastro fechado. Peça um convite ao administrador do sistema.");
+  }
+
   async register(dto: RegisterDto) {
+    await this.assertRegistrationAllowed(dto.email);
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException("Este e-mail já está cadastrado");
 

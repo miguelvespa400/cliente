@@ -45,40 +45,50 @@ services:
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
       PORT: 3001
-      NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost:3000}
+      NEXT_PUBLIC_APP_URL: https://${SITE_ADDRESS:?SITE_ADDRESS required}
+      # Cadastro fechado: só o primeiro usuário (dono) e os e-mails convidados abaixo
+      REGISTRATION_OPEN: "false"
+      REGISTRATION_ALLOWED_EMAILS: ${REGISTRATION_ALLOWED_EMAILS:-}
+      SCRAPER_MOCK_FALLBACK: "false"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      # A imagem (bookworm-slim) não tem wget/curl; usa o fetch do Node
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 15s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 60s
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        # Mesmo domínio do painel; o Caddy encaminha /api/* para a API
+        NEXT_PUBLIC_API_URL: /api
     container_name: prospex_web
     restart: always
-    environment:
-      NEXT_PUBLIC_API_URL: ${API_URL:-http://localhost:3001/api}
     depends_on:
       api:
         condition: service_healthy
 
-  nginx:
-    image: nginx:alpine
-    container_name: prospex_nginx
+  caddy:
+    image: caddy:2-alpine
+    container_name: prospex_caddy
     restart: always
     ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?SITE_ADDRESS required}
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - web
       - api
@@ -86,3 +96,5 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  caddy_data:
+  caddy_config:

@@ -14,7 +14,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_API_URL=http://api:3001/api
+# Variável lida pelo NAVEGADOR e embutida no build: precisa ser um endereço que o visitante
+# alcance. "/api" (mesmo domínio, roteado pelo Caddy) funciona com IP ou domínio.
+ARG NEXT_PUBLIC_API_URL=/api
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm --filter @prospex/web build
 
 FROM node:22-alpine AS runner

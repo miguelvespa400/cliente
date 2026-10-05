@@ -1,0 +1,23 @@
+# Proxy de produção: HTTPS automático (Let's Encrypt) para SITE_ADDRESS.
+# Sem domínio próprio, use o IP via sslip.io — ex.: 203-0-113-10.sslip.io
+{$SITE_ADDRESS} {
+	encode gzip
+
+	# API e documentação Swagger
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+
+	# Painel (Next.js)
+	handle {
+		reverse_proxy web:3000
+	}
+
+	header {
+		Strict-Transport-Security "max-age=63072000"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
