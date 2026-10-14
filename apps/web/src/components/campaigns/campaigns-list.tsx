@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, Megaphone, MapPin, Users, Star, MoreHorizontal, Loader2, ChevronRight, Download, Eye } from "lucide-react";
+import { Plus, Search, Megaphone, MapPin, Users, Star, MoreHorizontal, Loader2, ChevronRight, Download, Eye, CopyPlus } from "lucide-react";
 import { useCampaigns, type Campaign } from "@/hooks/use-campaigns";
 import { formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
@@ -43,8 +43,17 @@ function StatusBadge({ campaign }: { campaign: Campaign }) {
 }
 
 export function CampaignsList() {
-  const { campaigns, loading } = useCampaigns();
+  const { campaigns, loading, refresh } = useCampaigns();
   const [search, setSearch] = useState("");
+
+  const duplicateCampaign = async (id: string) => {
+    try {
+      await api.post(`/campaigns/${id}/duplicate`, {});
+      await refresh();
+    } catch (e) {
+      console.error("Failed to duplicate campaign:", e);
+    }
+  };
 
   const filtered = campaigns.filter(
     (c) =>
@@ -140,6 +149,9 @@ export function CampaignsList() {
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => api.download(`/export/leads/csv?campaignId=${c.id}`, `leads-${c.id}.csv`)}>
                             <Download className="w-3.5 h-3.5 mr-1" />Exportar leads (CSV)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => duplicateCampaign(c.id)}>
+                            <CopyPlus className="w-3.5 h-3.5 mr-1" />Duplicar como rascunho
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

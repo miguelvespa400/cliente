@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, X } from "lucide-react";
 import { motion } from "framer-motion";
+import type { Campaign } from "@/hooks/use-campaigns";
 
 const INDUSTRIES = [
   { value: "restaurant", label: "Restaurantes e alimentação" },
@@ -26,18 +27,19 @@ const INDUSTRIES = [
   { value: "professional", label: "Serviços profissionais" },
 ];
 
-export function CreateCampaignForm() {
+// Sem `campaign` cria e inicia; com `campaign` (rascunho) edita a configuração.
+export function CreateCampaignForm({ campaign }: { campaign?: Campaign } = {}) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [queries, setQueries] = useState<string[]>([""]);
+  const [loading, setLoading] = useState<"save" | "start" | null>(null);
+  const [queries, setQueries] = useState<string[]>(campaign?.searchQueries?.length ? campaign.searchQueries : [""]);
   const [form, setForm] = useState({
-    name: "",
-    industry: "",
-    location: "",
-    yourService: "",
-    maxResults: "20",
-    contentStyle: "balanced",
-    language: "portuguese",
+    name: campaign?.name ?? "",
+    industry: campaign?.industry ?? "",
+    location: campaign?.location ?? "",
+    yourService: campaign?.yourService ?? "",
+    maxResults: String(campaign?.maxResults ?? 20),
+    contentStyle: campaign?.contentStyle ?? "balanced",
+    language: campaign?.language ?? "portuguese",
   });
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -50,23 +52,29 @@ export function CreateCampaignForm() {
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
+    // Enter no formulário equivale a "Iniciar"; o botão "Salvar rascunho" informa o próprio modo.
+    const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const mode = submitter?.value === "save" ? "save" : "start";
+    setLoading(mode);
+    const body = {
+      name: form.name,
+      industry: form.industry,
+      location: form.location,
+      searchQueries: queries.filter(Boolean),
+      yourService: form.yourService,
+      maxResults: Number(form.maxResults),
+      contentStyle: form.contentStyle,
+      language: form.language,
+    };
     try {
-      const campaign = await api.post<{ id: string }>("/campaigns", {
-        name: form.name,
-        industry: form.industry,
-        location: form.location,
-        searchQueries: queries.filter(Boolean),
-        yourService: form.yourService,
-        maxResults: Number(form.maxResults),
-        contentStyle: form.contentStyle,
-        language: form.language,
-      });
-      await api.post(`/scraper/campaigns/${campaign.id}/start`, {});
-      router.push(`/campaigns/detalhe?id=${campaign.id}`);
+      const id = campaign
+        ? (await api.patch<{ id: string }>(`/campaigns/${campaign.id}`, body)).id
+        : (await api.post<{ id: string }>("/campaigns", body)).id;
+      if (mode === "start") await api.post(`/scraper/campaigns/${id}/start`, {});
+      router.push(`/campaigns/detalhe?id=${id}`);
     } catch (err) {
-      console.error("Failed to create campaign:", err);
-      setLoading(false);
+      console.error("Failed to save campaign:", err);
+      setLoading(null);
     }
   };
 
@@ -187,9 +195,16 @@ export function CreateCampaignForm() {
         </CardContent>
         <CardFooter className="gap-3">
           <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>
-          <Button type="submit" variant="gradient" className="flex-1" disabled={loading}>
-            {loading ? (
+          {campaign && (
+            <Button type="submit" value="save" variant="outline" disabled={!!loading}>
+              {loading === "save" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</> : "Salvar rascunho"}
+            </Button>
+          )}
+          <Button type="submit" value="start" variant="gradient" className="flex-1" disabled={!!loading}>
+            {loading === "start" ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Iniciando campanha...</>
+            ) : campaign ? (
+              "Salvar e iniciar"
             ) : (
               "Iniciar campanha"
             )}

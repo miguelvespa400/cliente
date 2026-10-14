@@ -9,6 +9,7 @@ export interface Campaign {
   location: string;
   searchQuery?: string;
   searchQueries?: string[];
+  maxResults?: number;
   yourService: string;
   contentStyle: string;
   language: string;

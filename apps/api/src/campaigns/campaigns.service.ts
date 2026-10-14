@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateCampaignDto } from "./dto/create-campaign.dto";
 import { UpdateCampaignDto } from "./dto/update-campaign.dto";
@@ -43,8 +43,29 @@ export class CampaignsService {
     });
   }
 
+  /** Copia só a configuração; a cópia nasce como rascunho, sem leads nem estatísticas. */
+  async duplicate(id: string, workspaceId = DEFAULT_WORKSPACE_ID) {
+    const source = await this.findOne(id, workspaceId);
+    return this.prisma.campaign.create({
+      data: {
+        name: `${source.name} (cópia)`,
+        description: source.description,
+        industry: source.industry,
+        location: source.location,
+        searchQueries: source.searchQueries,
+        maxResults: source.maxResults,
+        yourService: source.yourService,
+        contentStyle: source.contentStyle,
+        language: source.language,
+        workspaceId: source.workspaceId,
+      },
+    });
+  }
+
   async update(id: string, dto: UpdateCampaignDto, workspaceId = DEFAULT_WORKSPACE_ID) {
-    await this.findOne(id, workspaceId);
+    const campaign = await this.findOne(id, workspaceId);
+    // Depois de rodar, a configuração precisa bater com os leads coletados.
+    if (campaign.status !== "draft") throw new BadRequestException("Só é possível editar campanhas em rascunho");
     return this.prisma.campaign.update({ where: { id }, data: dto });
   }
 

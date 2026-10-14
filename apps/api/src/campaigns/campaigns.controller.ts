@@ -31,14 +31,20 @@ export class CampaignsController {
     return this.campaignsService.create(dto, workspaceId);
   }
 
+  @Post(":id/duplicate")
+  @ApiOperation({ summary: "Duplicate a campaign as a draft" })
+  duplicate(@Param("id") id: string, @WorkspaceId() workspaceId: string) {
+    return this.campaignsService.duplicate(id, workspaceId);
+  }
+
   @Patch(":id")
   @ApiOperation({ summary: "Update a campaign" })
-  update(@Param("id") id: string, @Body() dto: UpdateCampaignDto) {
-    return this.campaignsService.update(id, dto);
+  update(@Param("id") id: string, @Body() dto: UpdateCampaignDto, @WorkspaceId() workspaceId: string) {
+    return this.campaignsService.update(id, dto, workspaceId);
   }
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Delete a campaign" })
-  remove(@Param("id") id: string) { return this.campaignsService.remove(id); }
+  remove(@Param("id") id: string, @WorkspaceId() workspaceId: string) { return this.campaignsService.remove(id, workspaceId); }
 }
