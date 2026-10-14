@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { NotifierService } from "../integrations/notifier.service";
 import { UpdateCrmDto } from "./dto/update-crm.dto";
+import { UpdateContentDto } from "./dto/update-content.dto";
 import { dedupeKeys } from "../scraper/dedupe";
 
 const DEFAULT_WORKSPACE_ID = "default-workspace";
@@ -121,6 +122,24 @@ export class LeadsService {
     workspaceId: string;
   }>) {
     return this.prisma.lead.createMany({ data: leads, skipDuplicates: true });
+  }
+
+  async updateContent(id: string, dto: UpdateContentDto, workspaceId = DEFAULT_WORKSPACE_ID) {
+    const lead = await this.findOne(id, workspaceId);
+    const current = (lead.marketingContent ?? {}) as Record<string, unknown> & { email?: { subject?: string; body?: string } };
+    const next: Record<string, unknown> = { ...current };
+    if (dto.emailSubject !== undefined || dto.emailBody !== undefined) {
+      next.email = {
+        subject: (dto.emailSubject ?? current.email?.subject ?? "").trim(),
+        body: (dto.emailBody ?? current.email?.body ?? "").trim(),
+        // Editado à mão: o envio usa este texto, e não o texto padrão da campanha.
+        edited: true,
+      };
+    }
+    if (dto.whatsapp !== undefined) next.whatsapp = dto.whatsapp.trim();
+    if (dto.instagram !== undefined) next.instagram = dto.instagram.trim();
+    await this.prisma.lead.update({ where: { id: lead.id }, data: { marketingContent: next as object } });
+    return this.findOne(id, workspaceId);
   }
 
   async existingDedupeKeys(workspaceId: string): Promise<Set<string>> {

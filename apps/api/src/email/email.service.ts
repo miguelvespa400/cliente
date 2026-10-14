@@ -117,13 +117,14 @@ export class EmailService {
     const suppressed = await this.prisma.emailSuppression.findUnique({ where: { workspaceId_email: { workspaceId, email: to } } });
     if (suppressed) throw new BadRequestException(`Este e-mail não recebe mais mensagens (${suppressed.reason}).`);
 
-    // Prioridade: texto editado no envio > texto padrão da campanha > texto gerado para o lead.
-    const content = (lead.marketingContent ?? {}) as { email?: { subject?: string; body?: string } };
+    // Prioridade: texto do envio > texto editado à mão no lead > texto padrão da campanha > texto da IA.
+    const content = (lead.marketingContent ?? {}) as { email?: { subject?: string; body?: string; edited?: boolean } };
     const campaign = await this.prisma.campaign.findUnique({ where: { id: lead.campaignId }, select: { emailTemplate: true } });
     const template = (campaign?.emailTemplate ?? null) as { subject?: string; body?: string } | null;
     const fill = (text: string) => text.replace(/\{\{\s*empresa\s*\}\}/gi, lead.name);
-    const subject = fill(override?.subject?.trim() || template?.subject || content.email?.subject || "");
-    const body = fill(override?.body?.trim() || template?.body || content.email?.body || "");
+    const leadEdited = content.email?.edited ? content.email : null;
+    const subject = fill(override?.subject?.trim() || leadEdited?.subject || template?.subject || content.email?.subject || "");
+    const body = fill(override?.body?.trim() || leadEdited?.body || template?.body || content.email?.body || "");
     if (!subject || !body) throw new BadRequestException("Defina o texto do e-mail da campanha ou gere o conteúdo do lead.");
 
     const cfg = await this.getConfig(workspaceId);

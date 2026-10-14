@@ -2,6 +2,7 @@ import { Controller, Get, Patch, Param, Body, Query, UseGuards } from "@nestjs/c
 import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from "@nestjs/swagger";
 import { LeadsService } from "./leads.service";
 import { UpdateCrmDto } from "./dto/update-crm.dto";
+import { UpdateContentDto } from "./dto/update-content.dto";
 import { JwtGuard } from "../auth/jwt.guard";
 import { WorkspaceId } from "../auth/current-workspace.decorator";
 
@@ -40,6 +41,12 @@ export class LeadsController {
   @ApiOperation({ summary: "Get lead by ID" })
   findOne(@Param("id") id: string, @WorkspaceId() workspaceId: string) {
     return this.leadsService.findOne(id, workspaceId);
+  }
+
+  @Patch(":id/content")
+  @ApiOperation({ summary: "Edita os textos de abordagem do lead (e-mail, WhatsApp, Instagram)" })
+  updateContent(@Param("id") id: string, @Body() dto: UpdateContentDto, @WorkspaceId() workspaceId: string) {
+    return this.leadsService.updateContent(id, dto, workspaceId);
   }
 
   @Patch(":id/crm")

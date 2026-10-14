@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Phone, Globe, MapPin, Star, Mail, MessageCircle, Loader2, Copy, Instagram, Send } from "lucide-react";
+import { ArrowLeft, Phone, Globe, MapPin, Star, Mail, MessageCircle, Loader2, Copy, Instagram, Send, Pencil } from "lucide-react";
 import { gmailComposeUrl, whatsappUrl } from "@/lib/outreach";
 import { useLead } from "@/hooks/use-leads";
 import { WhatsAppSendDialog } from "@/components/leads/whatsapp-send-dialog";
 import { LeadEmailPanel } from "@/components/leads/lead-email-panel";
+import { LeadContentDialog } from "@/components/leads/lead-content-dialog";
 import { api } from "@/lib/api";
 import { ACTIVITY_TYPE_LABELS, INDUSTRY_LABELS, labelFor } from "@/lib/labels";
 
@@ -33,6 +34,7 @@ export function LeadDetail({ id }: { id: string }) {
   const [waConfig, setWaConfig] = useState<Record<string, string> | null>(null);
   const [waOpen, setWaOpen] = useState(false);
   const [sesConnected, setSesConnected] = useState(false);
+  const [editContent, setEditContent] = useState(false);
 
   useEffect(() => {
     api
@@ -175,7 +177,12 @@ export function LeadDetail({ id }: { id: string }) {
           {lead.marketingContent && (
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Abordagem gerada por IA</CardTitle>
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle className="text-base">Abordagem gerada por IA</CardTitle>
+                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setEditContent(true)}>
+                    <Pencil className="w-3 h-3 mr-1" />Editar textos
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {lead.marketingContent.email && (
@@ -309,6 +316,10 @@ export function LeadDetail({ id }: { id: string }) {
           </Card>
         </motion.div>
       </div>
+
+      {editContent && lead.marketingContent && (
+        <LeadContentDialog leadId={id} content={lead.marketingContent} onClose={() => setEditContent(false)} onSaved={refresh} />
+      )}
 
       {waOpen && lead.phone && (
         <WhatsAppSendDialog
