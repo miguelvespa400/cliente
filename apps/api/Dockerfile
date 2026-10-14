@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
     libdrm2 libdbus-1-3 libxkbcommon0 libx11-6 libxcomposite1 \
     libxdamage1 libxext6 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 \
-    libcairo2 libasound2 libxshmfence1 fonts-liberation \
+    libcairo2 libasound2 libxshmfence1 fonts-liberation openssl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/node_modules ./node_modules
@@ -45,6 +45,10 @@ COPY --from=builder /app/pnpm-workspace.yaml ./
 # (sem isso ele vai para /root/.cache e o processo "prospex" não o encontra).
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN pnpm --filter @prospex/api exec playwright install chromium && chmod -R a+rX /ms-playwright
+
+# O build roda em Alpine (musl); aqui é Debian (glibc). Baixa o motor de migração do Prisma
+# para esta plataforma ainda como root — em runtime o usuário "prospex" não pode gravar.
+RUN cd /app/packages/database && ./node_modules/.bin/prisma version >/dev/null && chmod -R a+rX /app/node_modules/.pnpm/@prisma+engines*
 
 RUN addgroup --system prospex && adduser --system --ingroup prospex prospex
 USER prospex
