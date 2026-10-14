@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { NotifierService } from "../integrations/notifier.service";
 import { UpdateCrmDto } from "./dto/update-crm.dto";
+import { dedupeKeys } from "../scraper/dedupe";
 
 const DEFAULT_WORKSPACE_ID = "default-workspace";
 
@@ -120,5 +121,13 @@ export class LeadsService {
     workspaceId: string;
   }>) {
     return this.prisma.lead.createMany({ data: leads, skipDuplicates: true });
+  }
+
+  async existingDedupeKeys(workspaceId: string): Promise<Set<string>> {
+    const leads = await this.prisma.lead.findMany({
+      where: { workspaceId },
+      select: { name: true, phone: true, email: true },
+    });
+    return new Set(leads.flatMap((l) => dedupeKeys(l)));
   }
 }
