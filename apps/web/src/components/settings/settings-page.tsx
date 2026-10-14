@@ -32,6 +32,14 @@ interface NewKeyResult extends ApiKey {
   key: string;
 }
 
+interface Member {
+  id: string;
+  role: string;
+  user: { id: string; name: string | null; email: string };
+}
+
+const ROLE_LABELS: Record<string, string> = { owner: "Proprietário", admin: "Administrador", member: "Membro" };
+
 interface Workspace {
   id: string;
   name: string;
@@ -61,6 +69,30 @@ export function SettingsPage() {
 
   const [keyPendingDelete, setKeyPendingDelete] = useState<ApiKey | null>(null);
   const [confirmDeleteWorkspace, setConfirmDeleteWorkspace] = useState(false);
+
+  const [members, setMembers] = useState<Member[]>([]);
+  const [membersLoading, setMembersLoading] = useState(true);
+
+  const loadMembers = useCallback(async () => {
+    try {
+      setMembers(await api.get<Member[]>("/workspace/members"));
+    } catch (e) {
+      console.error("Failed to load members:", e);
+    } finally {
+      setMembersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadMembers(); }, [loadMembers]);
+
+  const removeMember = async (memberId: string) => {
+    try {
+      await api.delete(`/workspace/members/${memberId}`);
+      setMembers((prev) => prev.filter((m) => m.id !== memberId));
+    } catch (e) {
+      console.error("Failed to remove member:", e);
+    }
+  };
 
   const loadApiKeys = useCallback(async () => {
     try {
@@ -401,14 +433,32 @@ export function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <div className="w-8 h-8 bg-gradient-brand rounded-full flex items-center justify-center text-white text-sm font-bold">A</div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Administrador</p>
-                    <p className="text-xs text-muted-foreground">admin@prospex.io</p>
-                  </div>
-                  <Badge>Proprietário</Badge>
-                </div>
+                {membersLoading ? (
+                  <div className="flex justify-center p-3"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
+                ) : (
+                  members.map((member) => {
+                    const label = member.user.name || member.user.email;
+                    return (
+                      <div key={member.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                        <div className="w-8 h-8 bg-gradient-brand rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          {label.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{label}</p>
+                          <p className="text-xs text-muted-foreground truncate">{member.user.email}</p>
+                        </div>
+                        <Badge variant={member.role === "owner" ? "default" : "secondary"}>
+                          {ROLE_LABELS[member.role] ?? member.role}
+                        </Badge>
+                        {member.role !== "owner" && (
+                          <Button variant="ghost" size="icon" onClick={() => removeMember(member.id)} aria-label="Remover membro">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
                 <Button variant="outline" className="w-full">
                   <Users className="mr-2 h-4 w-4" />Convidar membro da equipe
                 </Button>

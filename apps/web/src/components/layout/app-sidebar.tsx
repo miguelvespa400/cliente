@@ -126,15 +126,15 @@ export function SidebarContent() {
             <button className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md hover:bg-sidebar-accent transition-colors">
               <div className="w-7 h-7 bg-gradient-brand rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-xs font-semibold">
-                  {user ? getInitials(user.name) : "A"}
+                  {user ? getInitials(user.name) : ""}
                 </span>
               </div>
               <div className="flex-1 text-left min-w-0">
                 <p className="text-sidebar-foreground text-xs font-medium truncate">
-                  {user?.name ?? "Administrador"}
+                  {user?.name ?? ""}
                 </p>
                 <p className="text-sidebar-foreground/50 text-[11px] truncate">
-                  {user?.email ?? "admin@prospex.io"}
+                  {user?.email ?? ""}
                 </p>
               </div>
             </button>
