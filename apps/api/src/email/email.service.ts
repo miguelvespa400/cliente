@@ -117,10 +117,14 @@ export class EmailService {
     const suppressed = await this.prisma.emailSuppression.findUnique({ where: { workspaceId_email: { workspaceId, email: to } } });
     if (suppressed) throw new BadRequestException(`Este e-mail não recebe mais mensagens (${suppressed.reason}).`);
 
+    // Prioridade: texto editado no envio > texto padrão da campanha > texto gerado para o lead.
     const content = (lead.marketingContent ?? {}) as { email?: { subject?: string; body?: string } };
-    const subject = override?.subject?.trim() || content.email?.subject || "";
-    const body = override?.body?.trim() || content.email?.body || "";
-    if (!subject || !body) throw new BadRequestException("Este lead ainda não tem e-mail gerado pela IA.");
+    const campaign = await this.prisma.campaign.findUnique({ where: { id: lead.campaignId }, select: { emailTemplate: true } });
+    const template = (campaign?.emailTemplate ?? null) as { subject?: string; body?: string } | null;
+    const fill = (text: string) => text.replace(/\{\{\s*empresa\s*\}\}/gi, lead.name);
+    const subject = fill(override?.subject?.trim() || template?.subject || content.email?.subject || "");
+    const body = fill(override?.body?.trim() || template?.body || content.email?.body || "");
+    if (!subject || !body) throw new BadRequestException("Defina o texto do e-mail da campanha ou gere o conteúdo do lead.");
 
     const cfg = await this.getConfig(workspaceId);
     return this.prisma.emailMessage.create({
@@ -243,13 +247,16 @@ export class EmailService {
       select: { id: true, email: true, marketingContent: true },
       orderBy: { score: "desc" },
     });
+    const campaign = await this.prisma.campaign.findUnique({ where: { id: campaignId }, select: { emailTemplate: true } });
+    const template = (campaign?.emailTemplate ?? null) as { subject?: string; body?: string } | null;
+    const hasTemplate = !!(template?.subject && template?.body);
     const suppressed = new Set(
       (await this.prisma.emailSuppression.findMany({ where: { workspaceId }, select: { email: true } })).map((s) => s.email),
     );
     return leads
       .filter((l) => {
         const c = (l.marketingContent ?? {}) as { email?: { subject?: string; body?: string } };
-        return c.email?.subject && c.email?.body && !suppressed.has(l.email!.trim().toLowerCase());
+        return (hasTemplate || (c.email?.subject && c.email?.body)) && !suppressed.has(l.email!.trim().toLowerCase());
       })
       .map((l) => l.id);
   }

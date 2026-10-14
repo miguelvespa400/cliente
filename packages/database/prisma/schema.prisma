@@ -121,6 +121,9 @@ model Campaign {
   language      String    @default("portuguese")
   status        String    @default("draft")
   progress      Int       @default(0)
+  // Texto padrão do e-mail da campanha ({ subject, body }); tem prioridade sobre o texto
+  // gerado por lead. Aceita {{empresa}} no assunto e no corpo.
+  emailTemplate Json?
   error         String?
   startedAt     DateTime?
   completedAt   DateTime?

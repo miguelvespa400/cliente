@@ -55,6 +55,58 @@ export class MarketingAiService {
     return null;
   }
 
+  /**
+   * Texto padrão de e-mail para a campanha toda. Se houver um texto atual, a IA o usa como base
+   * (respeitando as correções feitas à mão) e aplica as instruções.
+   */
+  async generateEmailTemplate(
+    input: { industry: string; yourService: string; contentStyle: string; language: string; instructions?: string; current?: { subject?: string; body?: string } },
+    workspaceId?: string,
+  ): Promise<{ subject: string; body: string }> {
+    const resolved = await this.resolveClient(workspaceId);
+    if (!resolved) {
+      // Sem chave de IA: devolve o texto atual (ou um modelo simples) para não perder a edição.
+      return {
+        subject: input.current?.subject || `{{empresa}}: ${input.yourService.slice(0, 60)}`,
+        body: input.current?.body || `Olá, equipe da {{empresa}}!\n\n${input.yourService}\n\nPodemos conversar 15 minutos esta semana?\n\nAbraço,`,
+      };
+    }
+    const hasCurrent = !!(input.current?.subject || input.current?.body);
+    const prompt = `You write cold outreach emails in Brazilian Portuguese (pt-BR) unless told otherwise.
+Write ONE email template that will be sent to many businesses of the same segment.
+
+Segment: ${input.industry}
+What we offer: ${input.yourService}
+Tone: ${input.contentStyle}
+Language: ${input.language === "english" ? "English" : input.language === "spanish" ? "Spanish" : "Brazilian Portuguese (pt-BR)"}
+
+Rules:
+- Use the placeholder {{empresa}} where the business name goes (keep it exactly like that).
+- 80-140 words, short paragraphs, one clear call to action, no fake claims or invented numbers.
+- No signature block beyond a short closing line; no unsubscribe text (added automatically).
+${hasCurrent ? `
+CURRENT TEXT (the user edited it by hand — keep their corrections, facts and wording unless the instructions say otherwise):
+Subject: ${input.current?.subject ?? ""}
+Body:
+${input.current?.body ?? ""}
+` : ""}
+${input.instructions ? `
+USER INSTRUCTIONS (highest priority):
+${input.instructions}
+` : ""}
+Respond ONLY with valid JSON: { "subject": "...", "body": "..." }`;
+
+    const response = await resolved.client.chat.completions.create({
+      model: resolved.model,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.6,
+      response_format: { type: "json_object" },
+    });
+    const parsed = JSON.parse(response.choices[0].message.content ?? "{}") as { subject?: string; body?: string };
+    if (!parsed.subject || !parsed.body) throw new Error("A IA não devolveu assunto e corpo");
+    return { subject: parsed.subject, body: parsed.body };
+  }
+
   async generateContent(input: GenerateContentInput, workspaceId?: string): Promise<MarketingContent> {
     const resolved = await this.resolveClient(workspaceId);
     if (!resolved) return this.generateMockContent(input);

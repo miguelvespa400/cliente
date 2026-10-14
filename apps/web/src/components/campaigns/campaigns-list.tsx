@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, Megaphone, MapPin, Users, Star, MoreHorizontal, Loader2, ChevronRight, Download, Eye, CopyPlus } from "lucide-react";
+import { Plus, Search, Megaphone, MapPin, Users, Star, MoreHorizontal, Loader2, ChevronRight, Download, Eye, CopyPlus, Settings2 } from "lucide-react";
 import { useCampaigns, type Campaign } from "@/hooks/use-campaigns";
 import { formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
@@ -150,6 +150,11 @@ export function CampaignsList() {
                           <DropdownMenuItem onClick={() => api.download(`/export/leads/csv?campaignId=${c.id}`, `leads-${c.id}.csv`)}>
                             <Download className="w-3.5 h-3.5 mr-1" />Exportar leads (CSV)
                           </DropdownMenuItem>
+                          {c.status === "draft" && (
+                            <DropdownMenuItem asChild>
+                              <Link href={`/campaigns/editar?id=${c.id}`}><Settings2 className="w-3.5 h-3.5 mr-1" />Editar</Link>
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => duplicateCampaign(c.id)}>
                             <CopyPlus className="w-3.5 h-3.5 mr-1" />Duplicar como rascunho
                           </DropdownMenuItem>

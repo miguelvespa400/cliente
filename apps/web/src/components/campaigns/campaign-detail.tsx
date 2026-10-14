@@ -10,11 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, Download, Users, Star, TrendingUp, MapPin, Loader2, Search, List, Map as MapIcon, RotateCcw, Pencil, Check, X, Settings2 } from "lucide-react";
+import { ArrowLeft, Download, Users, Star, TrendingUp, MapPin, Loader2, Search, List, Map as MapIcon, RotateCcw, Pencil, Check, X, Settings2, Mail } from "lucide-react";
 import { useCampaign } from "@/hooks/use-campaigns";
 import { useLeads } from "@/hooks/use-leads";
 import { LeadsTable } from "@/components/leads/leads-table";
 import { CampaignEmailCard } from "@/components/campaigns/campaign-email-card";
+import { CampaignEmailTemplateDialog } from "@/components/campaigns/campaign-email-template-dialog";
 import { api } from "@/lib/api";
 import { INDUSTRY_LABELS, labelFor } from "@/lib/labels";
 
@@ -37,6 +38,7 @@ export function CampaignDetail({ id }: { id: string }) {
   const { leads, loading: leadsLoading, refresh: refreshLeads } = useLeads({ campaignId: id });
 
   const [starting, setStarting] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
   const [savingName, setSavingName] = useState(false);
@@ -173,6 +175,9 @@ export function CampaignDetail({ id }: { id: string }) {
               {campaign.status === "failed" ? "Tentar novamente" : "Iniciar"}
             </Button>
           )}
+          <Button variant="outline" size="sm" onClick={() => setTemplateOpen(true)}>
+            <Mail className="mr-2 h-4 w-4" />Editar texto
+          </Button>
           <Button variant="outline" size="sm" onClick={() => api.download(`/export/leads/csv?campaignId=${id}`, `leads-${id}.csv`)}>
             <Download className="mr-2 h-4 w-4" />CSV
           </Button>
@@ -203,6 +208,8 @@ export function CampaignDetail({ id }: { id: string }) {
           </Card>
         ))}
       </motion.div>
+
+      {templateOpen && <CampaignEmailTemplateDialog campaignId={id} onClose={() => setTemplateOpen(false)} />}
 
       {campaign.status === "completed" && (
         <motion.div variants={item}>

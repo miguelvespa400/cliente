@@ -1,14 +1,27 @@
-import { Body, Controller, Get, Param, Post, UseGuards, BadRequestException } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Put, UseGuards, BadRequestException } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { IsOptional, IsString, MaxLength } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 import { JwtGuard } from "../auth/jwt.guard";
 import { WorkspaceId } from "../auth/current-workspace.decorator";
 import { CampaignsService } from "../campaigns/campaigns.service";
+import { MarketingAiService } from "../ai/marketing-ai.service";
+import { PrismaService } from "../prisma/prisma.service";
 import { EmailService } from "./email.service";
 
 class SendEmailDto {
+  @IsOptional() @IsString() @MaxLength(300) subject?: string;
+  @IsOptional() @IsString() @MaxLength(20000) body?: string;
+}
+
+class EmailTemplateDto {
+  @IsString() @IsNotEmpty() @MaxLength(300) subject: string;
+  @IsString() @IsNotEmpty() @MaxLength(20000) body: string;
+}
+
+class GenerateTemplateDto {
+  @IsOptional() @IsString() @MaxLength(2000) instructions?: string;
   @IsOptional() @IsString() @MaxLength(300) subject?: string;
   @IsOptional() @IsString() @MaxLength(20000) body?: string;
 }
@@ -22,7 +35,47 @@ export class EmailController {
     private email: EmailService,
     private campaigns: CampaignsService,
     @InjectQueue("email") private queue: Queue<{ messageId: string }>,
+    private ai: MarketingAiService,
+    private prisma: PrismaService,
   ) {}
+
+  @Get("campaigns/:id/template")
+  @ApiOperation({ summary: "Texto padrão do e-mail da campanha (null = usa o texto gerado por lead)" })
+  async getTemplate(@Param("id") id: string, @WorkspaceId() workspaceId: string) {
+    const campaign = await this.campaigns.findOne(id, workspaceId);
+    return { template: campaign.emailTemplate ?? null };
+  }
+
+  @Put("campaigns/:id/template")
+  @ApiOperation({ summary: "Salva o texto padrão do e-mail da campanha" })
+  async saveTemplate(@Param("id") id: string, @Body() dto: EmailTemplateDto, @WorkspaceId() workspaceId: string) {
+    await this.campaigns.findOne(id, workspaceId);
+    const template = { subject: dto.subject.trim(), body: dto.body.trim() };
+    await this.prisma.campaign.update({ where: { id }, data: { emailTemplate: template } });
+    return { template };
+  }
+
+  @Post("campaigns/:id/template/generate")
+  @ApiOperation({ summary: "Gera (ou reescreve) o texto padrão com IA a partir das instruções e do texto atual; não salva" })
+  async generateTemplate(@Param("id") id: string, @Body() dto: GenerateTemplateDto, @WorkspaceId() workspaceId: string) {
+    const campaign = await this.campaigns.findOne(id, workspaceId);
+    try {
+      const template = await this.ai.generateEmailTemplate(
+        {
+          industry: campaign.industry,
+          yourService: campaign.yourService,
+          contentStyle: campaign.contentStyle,
+          language: campaign.language,
+          instructions: dto.instructions?.trim(),
+          current: { subject: dto.subject, body: dto.body },
+        },
+        workspaceId,
+      );
+      return { template };
+    } catch (e) {
+      throw new BadRequestException(`Falha ao gerar com IA: ${e instanceof Error ? e.message : e}`);
+    }
+  }
 
   @Post("test")
   @ApiOperation({ summary: "Testa as credenciais do Amazon SES" })
