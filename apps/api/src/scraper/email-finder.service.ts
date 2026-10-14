@@ -1,6 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { lookup } from "dns/promises";
-import { isIP } from "net";
+import { lookup as dnsLookup, type LookupAddress } from "dns";
+import { BlockList, isIP } from "net";
+import * as http from "http";
+import * as https from "https";
 
 // Busca um e-mail de contato no site da empresa (página inicial + páginas de contato).
 // O Google Maps quase nunca mostra e-mail; o site costuma ter um contato@/comercial@.
@@ -15,10 +17,43 @@ const IGNORED_DOMAINS = [
   "domain.com", "dominio.com", "email.com", "seuemail.com", "godaddy.com", "googleapis.com",
   "schema.org", "w3.org", "sentry.wixpress.com", "cloudflare.com",
 ];
-const PRIVATE_IP = [
-  /^127\./, /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./, /^169\.254\./, /^0\./, /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./,
-  /^::1$/, /^::$/, /^f[cd][0-9a-f]{2}:/i, /^fe[89ab][0-9a-f]:/i, /^::ffff:(127|10|192\.168|169\.254)\./i,
-];
+// Faixas que nunca são "site de empresa": rede interna, loopback, metadados da nuvem etc.
+const BLOCKED = new BlockList();
+for (const [net, prefix] of [
+  ["0.0.0.0", 8], ["10.0.0.0", 8], ["100.64.0.0", 10], ["127.0.0.0", 8], ["169.254.0.0", 16],
+  ["172.16.0.0", 12], ["192.0.0.0", 24], ["192.0.2.0", 24], ["192.168.0.0", 16], ["198.18.0.0", 15],
+  ["198.51.100.0", 24], ["203.0.113.0", 24], ["224.0.0.0", 4], ["240.0.0.0", 4],
+] as const) BLOCKED.addSubnet(net, prefix, "ipv4");
+for (const [net, prefix] of [["::", 128], ["::1", 128], ["fc00::", 7], ["fe80::", 10], ["ff00::", 8], ["64:ff9b::", 96], ["2001:db8::", 32]] as const) {
+  BLOCKED.addSubnet(net, prefix, "ipv6");
+}
+
+function isBlockedIp(address: string): boolean {
+  // IPv4 embutido em IPv6 (::ffff:10.0.0.1) é avaliado como IPv4.
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(address)?.[1];
+  if (mapped) return BLOCKED.check(mapped, "ipv4");
+  const family = isIP(address);
+  return family === 0 || BLOCKED.check(address, family === 6 ? "ipv6" : "ipv4");
+}
+
+// O IP é validado DENTRO da conexão (lookup do socket), não antes: assim um DNS que responde
+// um IP público na checagem e um interno na conexão (DNS rebinding) não passa.
+function safeLookup(
+  hostname: string,
+  options: { all?: boolean },
+  callback: (err: NodeJS.ErrnoException | null, address: string | LookupAddress[], family?: number) => void,
+) {
+  dnsLookup(hostname, { all: true }, (err, addresses) => {
+    if (err) return callback(err, "");
+    const list = addresses as LookupAddress[];
+    if (list.length === 0 || list.some((a) => isBlockedIp(a.address))) {
+      return callback(Object.assign(new Error(`Destino bloqueado: ${hostname}`), { code: "EBLOCKED" }), "");
+    }
+    if (options.all) return callback(null, list);
+    callback(null, list[0].address, list[0].family);
+  });
+}
+
 const IGNORED_EXT = /\.(png|jpe?g|gif|svg|webp|css|js|ico)$/i;
 // Prefixos de contato comercial vêm primeiro na escolha.
 const PREFERRED = ["contato", "comercial", "vendas", "atendimento", "faleconosco", "sac", "info", "adm", "administrativo"];
@@ -75,37 +110,55 @@ export class EmailFinderService {
     }
   }
 
-  /** Bloqueia SSRF: o "site" vem do Google Maps (dado externo) e pode apontar para a rede interna. */
-  private async isPublicUrl(url: URL): Promise<boolean> {
-    if (!["http:", "https:"].includes(url.protocol)) return false;
-    if (url.port && !["80", "443"].includes(url.port)) return false;
-    const host = url.hostname.replace(/^\[|\]$/g, "");
-    const addrs = isIP(host) ? [{ address: host }] : await lookup(host, { all: true }).catch(() => []);
-    if (addrs.length === 0) return false;
-    return addrs.every(({ address }) => !PRIVATE_IP.some((re) => re.test(address)));
+  /** GET com o IP validado na conexão; só http/https nas portas padrão. */
+  private request(url: URL): Promise<{ status: number; location: string | null; contentType: string; body: string }> {
+    return new Promise((resolve, reject) => {
+      if (!["http:", "https:"].includes(url.protocol)) return reject(new Error("Protocolo bloqueado"));
+      if (url.port && !["80", "443"].includes(url.port)) return reject(new Error("Porta bloqueada"));
+      const host = url.hostname.replace(/^\[|\]$/g, "");
+      if (isIP(host) && isBlockedIp(host)) return reject(new Error("IP bloqueado"));
+
+      const lib = url.protocol === "https:" ? https : http;
+      const req = lib.get(
+        url,
+        {
+          lookup: safeLookup as unknown as typeof dnsLookup,
+          timeout: TIMEOUT_MS,
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; ProspexBot/1.0)", Accept: "text/html" },
+        },
+        (res) => {
+          const status = res.statusCode ?? 0;
+          const contentType = String(res.headers["content-type"] ?? "");
+          const location = status >= 300 && status < 400 ? (res.headers.location ?? null) : null;
+          if (location || status >= 400 || !contentType.includes("html")) {
+            res.resume();
+            return resolve({ status, location, contentType, body: "" });
+          }
+          let body = "";
+          res.setEncoding("utf8");
+          res.on("data", (chunk: string) => {
+            body += chunk;
+            if (body.length > MAX_HTML) res.destroy();
+          });
+          res.on("close", () => resolve({ status, location, contentType, body: body.slice(0, MAX_HTML) }));
+          res.on("error", reject);
+        },
+      );
+      req.on("timeout", () => req.destroy(new Error("timeout")));
+      req.on("error", reject);
+    });
   }
 
   private async fetchHtml(url: string): Promise<string | null> {
     try {
       let current = new URL(url);
-      let res: Response | null = null;
-      // Redirecionamento manual para revalidar o destino a cada salto.
+      // Redirecionamento manual (máx. 3): cada salto passa de novo pelas mesmas travas.
       for (let hop = 0; hop <= 3; hop++) {
-        if (!(await this.isPublicUrl(current))) return null;
-        res = await fetch(current, {
-          redirect: "manual",
-          signal: AbortSignal.timeout(TIMEOUT_MS),
-          headers: { "User-Agent": "Mozilla/5.0 (compatible; ProspexBot/1.0)", Accept: "text/html" },
-        });
-        const location = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
-        if (!location) break;
-        current = new URL(location, current);
-        res = null;
+        const res = await this.request(current);
+        if (!res.location) return res.status >= 200 && res.status < 300 ? res.body : "";
+        current = new URL(res.location, current);
       }
-      if (!res) return "";
-      if (!res.ok) return "";
-      if (!(res.headers.get("content-type") ?? "").includes("html")) return "";
-      return (await res.text()).slice(0, MAX_HTML);
+      return "";
     } catch {
       return null;
     }
