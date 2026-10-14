@@ -124,7 +124,7 @@ export class EmailFinderService {
         {
           lookup: safeLookup as unknown as typeof dnsLookup,
           timeout: TIMEOUT_MS,
-          headers: { "User-Agent": "Mozilla/5.0 (compatible; ProspexBot/1.0)", Accept: "text/html" },
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; WishLeadBot/1.0)", Accept: "text/html" },
         },
         (res) => {
           const status = res.statusCode ?? 0;

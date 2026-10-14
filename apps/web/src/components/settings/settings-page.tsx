@@ -311,16 +311,16 @@ export function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Prospex API Keys */}
+          {/* WishLead API Keys */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Key className="w-4 h-4 text-muted-foreground" />
-                  <CardTitle className="text-base">Chaves de API do Prospex</CardTitle>
+                  <CardTitle className="text-base">Chaves de API do WishLead</CardTitle>
                 </div>
               </div>
-              <CardDescription>Chaves para acessar a API do Prospex a partir de ferramentas externas</CardDescription>
+              <CardDescription>Chaves para acessar a API do WishLead a partir de ferramentas externas</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* New key reveal */}
@@ -405,7 +405,7 @@ export function SettingsPage() {
               <div className="space-y-3">
                 {[
                   { name: "WhatsApp Business", description: "Envie mensagens de WhatsApp para leads" },
-                  { name: "Gmail", description: "Envie e-mails diretamente pelo Prospex" },
+                  { name: "Gmail", description: "Envie e-mails diretamente pelo WishLead" },
                   { name: "Telegram", description: "Receba notificações pelo Telegram" },
                   { name: "Webhook", description: "Envie dados para qualquer endpoint HTTP" },
                 ].map((integration) => (

@@ -46,7 +46,7 @@ export function SidebarContent() {
         <div className="w-7 h-7 bg-gradient-brand rounded-lg flex items-center justify-center flex-shrink-0 shadow-glow">
           <span className="text-white font-bold text-xs">P</span>
         </div>
-        <span className="text-sidebar-foreground font-semibold">Prospex</span>
+        <span className="text-sidebar-foreground font-semibold">WishLead</span>
         <Badge className="ml-auto text-[10px] py-0 px-1.5 bg-accent/20 text-accent border-0">
           Beta
         </Badge>

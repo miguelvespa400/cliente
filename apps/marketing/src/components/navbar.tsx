@@ -35,7 +35,7 @@ export function Navbar() {
           <div className="w-7 h-7 bg-gradient-brand rounded-lg flex items-center justify-center shadow-glow">
             <span className="text-white font-bold text-xs">P</span>
           </div>
-          <span className="font-semibold text-white">Prospex</span>
+          <span className="font-semibold text-white">WishLead</span>
           <span className="text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded-full font-medium border border-accent/20">
             Beta
           </span>

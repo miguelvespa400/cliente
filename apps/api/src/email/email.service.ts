@@ -412,7 +412,7 @@ export class EmailService {
         ReplyToAddresses: leadAddress ? [leadAddress] : undefined,
         Content: {
           Simple: {
-            Subject: { Data: `[Prospex] ${leadName} respondeu: ${subject}`, Charset: "UTF-8" },
+            Subject: { Data: `[WishLead] ${leadName} respondeu: ${subject}`, Charset: "UTF-8" },
             Body: { Text: { Data: `${leadName} (${from}) respondeu:\n\n${reply || "(sem texto)"}\n\n— Responda este e-mail para falar direto com o lead.`, Charset: "UTF-8" } },
           },
         },

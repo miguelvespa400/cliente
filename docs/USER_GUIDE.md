@@ -1,6 +1,6 @@
-# Prospex — User Guide
+# WishLead — User Guide
 
-Panduan lengkap penggunaan Prospex dari instalasi hingga close deals pertama.
+Panduan lengkap penggunaan WishLead dari instalasi hingga close deals pertama.
 
 ---
 
@@ -80,7 +80,7 @@ Buka browser: **http://localhost:3000**
 
 ## 2. Konfigurasi AI Provider
 
-Prospex mendukung berbagai AI provider via API OpenAI-compatible.
+WishLead mendukung berbagai AI provider via API OpenAI-compatible.
 
 Masuk ke **Settings → AI Configuration**.
 
@@ -112,13 +112,13 @@ Model    : llama3.2
 Base URL : http://localhost:11434/v1
 ```
 
-> **Tanpa AI key:** Prospex tetap berfungsi penuh — AI scoring pakai algoritma berbasis rules, konten marketing pakai template default.
+> **Tanpa AI key:** WishLead tetap berfungsi penuh — AI scoring pakai algoritma berbasis rules, konten marketing pakai template default.
 
 ---
 
 ## 3. Membuat Campaign
 
-Campaign adalah unit kerja utama di Prospex. Satu campaign = satu batch pencarian leads.
+Campaign adalah unit kerja utama di WishLead. Satu campaign = satu batch pencarian leads.
 
 ### Langkah
 
@@ -313,11 +313,11 @@ File `.vcf` bisa langsung dibuka di HP untuk save kontak:
 
 **Settings → AI Configuration** — simpan OpenAI key, model, dan base URL. Data tersimpan di database (bukan file `.env`), jadi bisa diupdate live tanpa restart.
 
-### Prospex API Keys
+### WishLead API Keys
 
-Untuk mengakses Prospex API dari tools eksternal (Zapier, n8n, custom scripts):
+Untuk mengakses WishLead API dari tools eksternal (Zapier, n8n, custom scripts):
 
-1. Settings → **Prospex API Keys**
+1. Settings → **WishLead API Keys**
 2. Isi nama key (misal: "Zapier", "Production")
 3. Klik **+**
 4. **Salin key yang muncul sekarang** — tidak akan ditampilkan lagi
@@ -340,7 +340,7 @@ Error: Failed to fetch http://localhost:3001/api/...
 Pastikan API sudah jalan:
 ```bash
 pnpm --filter @prospex/api dev
-# Harus lihat: "Prospex API running on http://localhost:3001"
+# Harus lihat: "WishLead API running on http://localhost:3001"
 ```
 
 ### Database error saat start API
@@ -402,4 +402,4 @@ pnpm --filter @prospex/database db:push
 
 ---
 
-_Prospex — open-source AI GTM automation platform_
+_WishLead — open-source AI GTM automation platform_

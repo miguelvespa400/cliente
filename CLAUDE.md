@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Prospex — a self-hosted, open-source GTM automation platform (Google Maps lead scraping + AI-scored leads + AI-generated outreach + CRM pipeline). Turborepo/pnpm monorepo.
+WishLead — a self-hosted, open-source GTM automation platform (Google Maps lead scraping + AI-scored leads + AI-generated outreach + CRM pipeline). Turborepo/pnpm monorepo.
+
+Note: internal identifiers intentionally keep the old name — packages `@prospex/*`, containers `prospex_*`, DB names/users, SES tag `prospex_message`, SNS topic `prospex-ses`.
 
 ## Commands
 

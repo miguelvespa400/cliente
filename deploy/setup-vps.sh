@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Instala/atualiza o Prospex em produção numa VPS Ubuntu/Debian (rodar como root).
+# Instala/atualiza o WishLead em produção numa VPS Ubuntu/Debian (rodar como root).
 #   curl -fsSL https://raw.githubusercontent.com/miguelvespa400/cliente/main/deploy/setup-vps.sh | bash
 # Idempotente: na 1ª vez instala Docker, cria o .env com segredos novos e sobe tudo;
 # nas próximas só atualiza o código e reconstrói. O .env nunca é sobrescrito.

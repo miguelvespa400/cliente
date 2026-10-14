@@ -28,7 +28,7 @@ export function OpenSource() {
         </h2>
 
         <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
-          Prospex is free and open source. Self-host it on your own server, customize it for your needs,
+          WishLead is free and open source. Self-host it on your own server, customize it for your needs,
           or contribute to make it better for the whole community.
         </p>
 

@@ -10,7 +10,7 @@ export function Footer() {
           <div className="w-6 h-6 bg-gradient-brand rounded-md flex items-center justify-center">
             <span className="text-white font-bold text-[10px]">P</span>
           </div>
-          <span className="text-white font-semibold text-sm">Prospex</span>
+          <span className="text-white font-semibold text-sm">WishLead</span>
           <span className="text-slate-600 text-xs">— Open-source AI GTM Platform</span>
         </div>
         <div className="flex items-center gap-6 text-slate-500 text-xs">
@@ -22,7 +22,7 @@ export function Footer() {
             <Github className="w-3.5 h-3.5" />GitHub
           </Link>
           <span>MIT License</span>
-          <span>© 2026 Prospex</span>
+          <span>© 2026 WishLead</span>
         </div>
       </div>
     </footer>

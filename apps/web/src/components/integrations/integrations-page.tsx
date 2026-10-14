@@ -57,7 +57,7 @@ const integrations: Array<{
   {
     id: "whatsapp",
     name: "WhatsApp Business",
-    description: "Envie a abordagem direto pelo Prospex com a API oficial do WhatsApp (Meta). Sem conexão, o botão do lead abre o WhatsApp com a mensagem pronta para você enviar.",
+    description: "Envie a abordagem direto pelo WishLead com a API oficial do WhatsApp (Meta). Sem conexão, o botão do lead abre o WhatsApp com a mensagem pronta para você enviar.",
     icon: MessageCircle,
     color: "text-emerald-500",
     bg: "bg-emerald-500/10",
@@ -67,7 +67,7 @@ const integrations: Array<{
   {
     id: "ses",
     name: "Amazon SES",
-    description: "Envie os e-mails de abordagem pelo Prospex, um por um ou em lote por campanha, e acompanhe entrega, abertura, clique e resposta de cada lead.",
+    description: "Envie os e-mails de abordagem pelo WishLead, um por um ou em lote por campanha, e acompanhe entrega, abertura, clique e resposta de cada lead.",
     icon: Mail,
     color: "text-amber-600",
     bg: "bg-amber-500/10",
@@ -117,7 +117,7 @@ const integrations: Array<{
   {
     id: "n8n",
     name: "n8n / Make",
-    description: "Monte fluxos automáticos com os leads do Prospex usando o nó Webhook do n8n ou do Make.",
+    description: "Monte fluxos automáticos com os leads do WishLead usando o nó Webhook do n8n ou do Make.",
     icon: Plug,
     color: "text-purple-500",
     bg: "bg-purple-500/10",
@@ -201,7 +201,7 @@ export function IntegrationsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Integrações</h1>
-          <p className="text-muted-foreground mt-1">Conecte o Prospex às ferramentas e fluxos de trabalho que você já usa</p>
+          <p className="text-muted-foreground mt-1">Conecte o WishLead às ferramentas e fluxos de trabalho que você já usa</p>
         </div>
         <Button asChild variant="outline">
           <Link href="/settings">
@@ -264,7 +264,7 @@ export function IntegrationsPage() {
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-[200px]">
-            <p className="text-sm font-medium">API REST do Prospex</p>
+            <p className="text-sm font-medium">API REST do WishLead</p>
             <p className="text-xs text-muted-foreground mt-0.5">Acesse leads e campanhas via código com uma chave de API.</p>
           </div>
           <Button size="sm" asChild variant="outline">

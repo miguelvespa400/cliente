@@ -17,7 +17,7 @@ const steps = [
     num: "01",
     icon: MapPin,
     title: "Find leads",
-    desc: "Enter your target industry and city. Prospex scrapes Google Maps and scores each business using AI — rating, website presence, location value, and more.",
+    desc: "Enter your target industry and city. WishLead scrapes Google Maps and scores each business using AI — rating, website presence, location value, and more.",
     color: "text-purple-400",
     border: "border-purple-500/30",
     bg: "bg-purple-500/10",

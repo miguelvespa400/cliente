@@ -1,6 +1,6 @@
-# Contributing to Prospex
+# Contributing to WishLead
 
-Thank you for your interest in contributing to Prospex — the open-source AI GTM automation platform!
+Thank you for your interest in contributing to WishLead — the open-source AI GTM automation platform!
 
 ## Getting Started
 
@@ -126,4 +126,4 @@ Be respectful, constructive, and inclusive. We follow the [Contributor Covenant]
 
 ---
 
-**Every contribution, big or small, makes Prospex better for business owners worldwide. Thank you!**
+**Every contribution, big or small, makes WishLead better for business owners worldwide. Thank you!**

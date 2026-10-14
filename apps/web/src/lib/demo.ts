@@ -21,7 +21,7 @@ const SIMULATED_RUN_MS = 25_000;
 
 export const DEMO_SESSION = {
   token: "demo",
-  user: { id: "demo-user", name: "Visitante", email: "visitante@demo.prospex" },
+  user: { id: "demo-user", name: "Visitante", email: "visitante@demo.wishlead" },
   workspace: { id: "demo-workspace", name: "Netwish (demonstração)", slug: "netwish-demo" },
 };
 

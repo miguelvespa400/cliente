@@ -35,7 +35,7 @@ export class IntegrationsController {
 
     if (type === "webhook") {
       if (!cfg.url) throw new BadRequestException("Informe a URL do webhook");
-      return this.notifier.sendWebhook(cfg, "test", workspaceId, { message: "Teste do Prospex: integração funcionando" });
+      return this.notifier.sendWebhook(cfg, "test", workspaceId, { message: "Teste do WishLead: integração funcionando" });
     }
     if (type === "telegram") {
       if (!cfg.botToken || !cfg.chatId) throw new BadRequestException("Informe o token do bot e o ID do chat");

@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Prospex — Prospecção automatizada com IA",
+  title: "WishLead — Prospecção automatizada com IA",
   description: "Encontre leads, gere abordagens personalizadas e feche negócios — tudo com IA.",
 };
 

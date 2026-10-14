@@ -52,7 +52,7 @@ export class NotifierService {
     data: Record<string, unknown>,
   ): Promise<DeliveryResult> {
     const body = JSON.stringify({ event, timestamp: new Date().toISOString(), workspaceId, data });
-    const headers: Record<string, string> = { "Content-Type": "application/json", "User-Agent": "Prospex-Webhook/1.0" };
+    const headers: Record<string, string> = { "Content-Type": "application/json", "User-Agent": "WishLead-Webhook/1.0" };
     // Assinatura opcional para o receptor validar a origem: HMAC-SHA256 do corpo com o segredo.
     if (cfg.secret) headers["X-Prospex-Signature"] = `sha256=${createHmac("sha256", cfg.secret).update(body).digest("hex")}`;
     return deliver(cfg.url, { method: "POST", headers, body });
@@ -77,7 +77,7 @@ export class NotifierService {
       return [
         `✅ <b>Campanha concluída:</b> ${esc(d.campaign?.name)}`,
         `${d.stats?.totalLeads ?? 0} leads · ${d.stats?.priorityLeads ?? 0} de alta prioridade · nota média ${d.stats?.averageScore ?? 0}`,
-        `<a href="${this.appUrl(`/campaigns/detalhe?id=${d.campaign?.id}`)}">Abrir no Prospex</a>`,
+        `<a href="${this.appUrl(`/campaigns/detalhe?id=${d.campaign?.id}`)}">Abrir no WishLead</a>`,
       ].join("\n");
     }
     if (event === "campaign.failed") {
@@ -87,10 +87,10 @@ export class NotifierService {
       return [
         `🔄 <b>${esc(d.lead?.name)}</b>: ${CRM_STATUS_PT[d.from] ?? d.from} → <b>${CRM_STATUS_PT[d.to] ?? d.to}</b>`,
         d.lead?.phone ? `📞 ${esc(d.lead.phone)}` : "",
-        `<a href="${this.appUrl(`/leads/detalhe?id=${d.lead?.id}`)}">Abrir no Prospex</a>`,
+        `<a href="${this.appUrl(`/leads/detalhe?id=${d.lead?.id}`)}">Abrir no WishLead</a>`,
       ].filter(Boolean).join("\n");
     }
-    return "🔔 <b>Prospex conectado!</b> Você vai receber aqui os avisos de campanhas e do CRM.";
+    return "🔔 <b>WishLead conectado!</b> Você vai receber aqui os avisos de campanhas e do CRM.";
   }
 }
 

@@ -73,7 +73,7 @@ export function Hero() {
                 <div className="w-3 h-3 rounded-full bg-green-500/50" />
               </div>
               <div className="flex-1 mx-4 bg-white/5 rounded-md px-3 py-1 text-xs text-slate-500 text-left">
-                app.prospex.io/dashboard
+                lead.netwish.com.br/dashboard
               </div>
             </div>
             {/* Mock UI */}

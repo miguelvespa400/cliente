@@ -3,10 +3,10 @@ import { test, expect } from "./fixtures";
 test.describe("Settings", () => {
   test("settings page loads all sections", async ({ authedPage: page }) => {
     await page.goto("/settings");
-    // "Configuração de IA" / "Chaves de API do Prospex" live under the "IA e chaves de API"
+    // "Configuração de IA" / "Chaves de API do WishLead" live under the "IA e chaves de API"
     // tab, which is not the default tab and isn't rendered until activated.
     await page.getByRole("tab", { name: "IA e chaves de API" }).click();
-    await expect(page.getByRole("heading", { name: /Chaves de API do Prospex/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Chaves de API do WishLead/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Configuração de IA" })).toBeVisible();
   });
 

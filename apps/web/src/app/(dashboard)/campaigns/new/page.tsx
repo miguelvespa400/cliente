@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CreateCampaignForm } from "@/components/campaigns/create-campaign-form";
 
-export const metadata: Metadata = { title: "Nova campanha | Prospex" };
+export const metadata: Metadata = { title: "Nova campanha | WishLead" };
 
 export default function NewCampaignPage() {
   return (

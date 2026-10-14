@@ -23,7 +23,7 @@ export class AppController {
     return {
       status,
       timestamp: new Date().toISOString(),
-      service: "prospex-api",
+      service: "wishlead-api",
       uptime: Math.floor(process.uptime()),
       db,
       ...(dbLatency !== null && { dbLatencyMs: dbLatency }),

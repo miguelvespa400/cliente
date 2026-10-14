@@ -1,6 +1,6 @@
 
 <div align="center">
-  <h1>Prospex</h1>
+  <h1>WishLead</h1>
   <p><strong>Open-source AI-powered GTM automation platform</strong></p>
   <p>Find leads · Score them with AI · Generate personalized outreach · Close deals</p>
 
@@ -14,16 +14,16 @@
 
 > ## 🇧🇷 Sobre este repositório (Netwish)
 >
-> Versão do **Prospex** adaptada pela Netwish: interface do painel, mensagens de erro, exportação CSV e conteúdo gerado por IA **traduzidos para português (pt-BR)**, com idioma padrão das campanhas em português.
+> Versão do **WishLead** adaptada pela Netwish: interface do painel, mensagens de erro, exportação CSV e conteúdo gerado por IA **traduzidos para português (pt-BR)**, com idioma padrão das campanhas em português.
 >
 > - **Site de apresentação:** https://miguelvespa400.github.io/cliente/
 > - **Demonstração navegável do painel:** https://miguelvespa400.github.io/cliente/app/ — entra direto, sem senha, com dados **fictícios**. Dá para abrir campanhas, leads, mensagens da IA, mudar status no CRM e simular uma campanha nova.
 > - **Painel real** (busca de verdade no Google Maps e IA): precisa de API + PostgreSQL + Redis, então roda localmente ou num servidor — siga o *Quick Start* abaixo.
 > - Projeto original: [asiifdev/business-leads-ai-automation](https://github.com/asiifdev/business-leads-ai-automation), licença MIT.
 
-## What is Prospex?
+## What is WishLead?
 
-Prospex is a **self-hosted, open-source** platform that combines lead discovery, AI-powered outreach generation, and CRM management in one dashboard.
+WishLead is a **self-hosted, open-source** platform that combines lead discovery, AI-powered outreach generation, and CRM management in one dashboard.
 
 Think Apollo.io + Instantly.ai — but open-source, self-hosted, and free.
 
@@ -152,7 +152,7 @@ Full interactive docs at `/api/docs` (Swagger).
 
 ## Using OpenRouter / Ollama
 
-Prospex supports any OpenAI-compatible AI provider:
+WishLead supports any OpenAI-compatible AI provider:
 
 **OpenRouter** (access Claude, Gemini, Llama, etc.):
 ```env
