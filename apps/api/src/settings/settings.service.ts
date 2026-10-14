@@ -5,7 +5,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { encryptSecret, decryptSecret } from "./encryption.util";
 
 const DEFAULT_WORKSPACE_ID = "default-workspace";
-const SECRET_CONFIG_KEYS = ["apiKey", "botToken", "secret", "accessToken"];
+const SECRET_CONFIG_KEYS = ["apiKey", "botToken", "secret", "accessToken", "secretAccessKey"];
 // Segredos nunca voltam para o navegador: a tela recebe só os 4 últimos dígitos.
 const MASK_PREFIX = "••••••••";
 

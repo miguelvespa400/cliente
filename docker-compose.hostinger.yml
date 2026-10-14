@@ -1,0 +1,17 @@
+# Override para o VPS Hostinger da Netwish (srv688907): lá o HTTPS é do Cloudflare (proxy
+# laranja) e as portas 80/443 são do nginx central, que atende ~25 sites de clientes.
+# Por isso o Caddy NÃO sobe: liste só os serviços abaixo no `up`.
+#
+#   docker compose -f docker-compose.prod.yml -f docker-compose.hostinger.yml --env-file .env \
+#     up -d --build postgres redis api web
+#
+# O vhost do nginx central encaminha /api → prospex_api:3001 e o resto → prospex_web:3000.
+services:
+  api:
+    networks: [default, nginx_default]
+  web:
+    networks: [default, nginx_default]
+
+networks:
+  nginx_default:
+    external: true

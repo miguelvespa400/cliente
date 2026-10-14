@@ -12,6 +12,8 @@ async function bootstrap() {
   app.set("trust proxy", 1);
 
   app.use(helmet());
+  // O SNS (eventos do SES) envia JSON com Content-Type text/plain.
+  app.useBodyParser("text", { type: "text/plain", limit: "2mb" });
   app.setGlobalPrefix("api");
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   app.useGlobalFilters(new HttpExceptionFilter());

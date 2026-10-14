@@ -29,8 +29,8 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
-type IntegrationId = "whatsapp" | "gmail" | "telegram" | "webhook" | "zapier" | "n8n";
-type Configurable = "telegram" | "webhook" | "whatsapp";
+type IntegrationId = "whatsapp" | "ses" | "gmail" | "telegram" | "webhook" | "zapier" | "n8n";
+type Configurable = "telegram" | "webhook" | "whatsapp" | "ses";
 
 interface StoredIntegration {
   type: string;
@@ -63,6 +63,16 @@ const integrations: Array<{
     bg: "bg-emerald-500/10",
     category: "Mensagens",
     mode: "whatsapp",
+  },
+  {
+    id: "ses",
+    name: "Amazon SES",
+    description: "Envie os e-mails de abordagem pelo Prospex, um por um ou em lote por campanha, e acompanhe entrega, abertura, clique e resposta de cada lead.",
+    icon: Mail,
+    color: "text-amber-600",
+    bg: "bg-amber-500/10",
+    category: "E-mail",
+    mode: "ses",
   },
   {
     id: "gmail",
@@ -125,6 +135,14 @@ const GUIDES: Record<IntegrationId, React.ReactNode> = {
       <li>No <b>WhatsApp Manager → Modelos de mensagem</b>, crie um modelo (categoria Marketing, idioma Português), por exemplo: <i>Olá, {"{{1}}"}! {"{{2}}"}</i>, e aguarde a aprovação.</li>
     </ol>
   ),
+  ses: (
+    <ol className="list-decimal pl-4 space-y-1">
+      <li>No <b>Amazon SES</b>, verifique o subdomínio de envio (ex.: <code>contato.netwish.com.br</code>) com DKIM e configure SPF/DMARC no DNS.</li>
+      <li>Crie um <b>configuration set</b> com rastreamento de abertura e clique e um destino de eventos <b>SNS</b> apontando para <code>/api/email/sns</code>.</li>
+      <li>Para as respostas virarem &quot;Respondeu&quot; no CRM: aponte o MX do domínio de respostas para o SES e crie uma regra de recebimento com ação SNS.</li>
+      <li>Crie um usuário IAM só com <code>ses:SendEmail</code> e <code>ses:GetAccount</code> e cole as chaves abaixo.</li>
+    </ol>
+  ),
   gmail: null,
   telegram: (
     <ol className="list-decimal pl-4 space-y-1">
@@ -172,6 +190,7 @@ export function IntegrationsPage() {
     if (mode === "builtin") return true;
     const cfg = stored.find((s) => s.type === mode)?.config;
     if (mode === "whatsapp") return !!(cfg?.accessToken && cfg?.phoneNumberId);
+    if (mode === "ses") return !!cfg?.fromEmail;
     return mode === "webhook" ? !!cfg?.url : !!(cfg?.botToken && cfg?.chatId);
   };
 
@@ -293,16 +312,30 @@ function IntegrationDialog({
   const [testing, setTesting] = useState(false);
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setCfg((p) => ({ ...p, [k]: e.target.value }));
 
-  // WhatsApp não usa a lista de eventos: ele envia mensagens, não recebe avisos.
-  const hasEvents = type !== "whatsapp";
+  // WhatsApp e SES não usam a lista de eventos: eles enviam mensagens, não recebem avisos.
+  const hasEvents = type !== "whatsapp" && type !== "ses";
   const valid =
     type === "webhook" ? /^https?:\/\/.+/i.test(cfg.url ?? "")
     : type === "telegram" ? !!(cfg.botToken && cfg.chatId)
+    : type === "ses" ? /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cfg.fromEmail ?? "")
     : !!(cfg.accessToken && cfg.phoneNumberId && cfg.templateName);
 
   const buildConfig = (): Record<string, string> => {
     if (type === "webhook") return { url: cfg.url ?? "", secret: cfg.secret ?? "", events: events.join(",") };
     if (type === "telegram") return { botToken: cfg.botToken ?? "", chatId: cfg.chatId ?? "", events: events.join(",") };
+    if (type === "ses") {
+      return {
+        accessKeyId: (cfg.accessKeyId ?? "").trim(),
+        secretAccessKey: cfg.secretAccessKey ?? "",
+        region: (cfg.region || "us-east-1").trim(),
+        fromEmail: (cfg.fromEmail ?? "").trim(),
+        fromName: (cfg.fromName ?? "").trim(),
+        configurationSet: (cfg.configurationSet ?? "").trim(),
+        replyDomain: (cfg.replyDomain ?? "").trim(),
+        forwardRepliesTo: (cfg.forwardRepliesTo ?? "").trim(),
+        dailyLimit: cfg.dailyLimit || "50",
+      };
+    }
     return {
       accessToken: cfg.accessToken ?? "",
       phoneNumberId: (cfg.phoneNumberId ?? "").trim(),
@@ -332,11 +365,14 @@ function IntegrationDialog({
     if (!(await save())) return;
     setTesting(true);
     try {
-      const r = await api.post<{ ok: boolean; status?: number; error?: string; phone?: string; name?: string }>(
-        `/integrations/${type}/test`,
+      const r = await api.post<{ ok: boolean; status?: number; error?: string; phone?: string; name?: string; production?: boolean; sentLast24h?: number; max24h?: number }>(
+        type === "ses" ? "/email/test" : `/integrations/${type}/test`,
         {},
       );
-      if (r.ok && type === "whatsapp") {
+      if (r.ok && type === "ses") {
+        if (r.production) toast.success(`SES conectado: ${r.sentLast24h} de ${r.max24h} envios usados nas últimas 24 h`);
+        else toast.warning("SES conectado, mas em sandbox: só envia para endereços verificados");
+      } else if (r.ok && type === "whatsapp") {
         toast.success(`Conectado ao número ${r.phone} (${r.name})`);
         if (cfg.wabaId) setTemplates(await api.get<typeof templates>("/integrations/whatsapp/templates").catch(() => []));
       } else if (r.ok) {
@@ -473,6 +509,58 @@ function IntegrationDialog({
             </>
           )}
 
+          {type === "ses" && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="ses-from">E-mail de envio</Label>
+                  <Input id="ses-from" placeholder="vinicius@contato.netwish.com.br" value={cfg.fromEmail ?? ""} onChange={set("fromEmail")} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="ses-name">Nome do remetente</Label>
+                  <Input id="ses-name" placeholder="Vinicius | Netwish" value={cfg.fromName ?? ""} onChange={set("fromName")} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="ses-key">Access key ID (IAM)</Label>
+                  <Input id="ses-key" placeholder="AKIA..." value={cfg.accessKeyId ?? ""} onChange={set("accessKeyId")} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="ses-secret">Secret access key</Label>
+                  <Input id="ses-secret" type="password" value={cfg.secretAccessKey ?? ""} onChange={set("secretAccessKey")} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="ses-region">Região</Label>
+                  <Input id="ses-region" placeholder="us-east-1" value={cfg.region ?? ""} onChange={set("region")} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="ses-cs">Configuration set (rastreamento)</Label>
+                  <Input id="ses-cs" placeholder="prospex" value={cfg.configurationSet ?? ""} onChange={set("configurationSet")} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="ses-reply">Domínio de respostas (opcional)</Label>
+                  <Input id="ses-reply" placeholder="resposta.netwish.com.br" value={cfg.replyDomain ?? ""} onChange={set("replyDomain")} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="ses-fwd">Encaminhar respostas para</Label>
+                  <Input id="ses-fwd" placeholder="vinicius@netwish.com.br" value={cfg.forwardRepliesTo ?? ""} onChange={set("forwardRepliesTo")} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="ses-limit">Limite de e-mails por dia</Label>
+                <Input id="ses-limit" type="number" min={1} className="w-32" value={cfg.dailyLimit ?? "50"} onChange={set("dailyLimit")} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                E-mail frio de domínio novo: comece com 20 a 50 por dia e aumente aos poucos. Reclamação de spam acima de 0,1% pode pausar a conta SES inteira.
+              </p>
+            </>
+          )}
+
           {hasEvents && (
             <div className="space-y-2">
               <Label>Enviar quando</Label>
@@ -487,14 +575,14 @@ function IntegrationDialog({
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2 flex-wrap">
-          {(initial.url || initial.botToken || initial.accessToken) && (
+          {(initial.url || initial.botToken || initial.accessToken || initial.fromEmail) && (
             <Button variant="ghost" className="text-destructive sm:mr-auto" onClick={disconnect} disabled={saving || testing}>
               Desconectar
             </Button>
           )}
           <Button variant="outline" onClick={test} disabled={blocked}>
             {testing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-            {type === "whatsapp" ? "Testar conexão" : "Enviar teste"}
+            {type === "whatsapp" || type === "ses" ? "Testar conexão" : "Enviar teste"}
           </Button>
           <Button variant="gradient" onClick={async () => { if (await save()) onClose(); }} disabled={blocked}>
             {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}Salvar

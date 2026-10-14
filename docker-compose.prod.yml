@@ -50,6 +50,9 @@ services:
       REGISTRATION_OPEN: "false"
       REGISTRATION_ALLOWED_EMAILS: ${REGISTRATION_ALLOWED_EMAILS:-}
       SCRAPER_MOCK_FALLBACK: "false"
+      # E-mail (Amazon SES): links de descadastro e rota de eventos do SNS
+      API_PUBLIC_URL: https://${SITE_ADDRESS:?SITE_ADDRESS required}
+      SES_SNS_TOPIC_ARN: ${SES_SNS_TOPIC_ARN:-}
     depends_on:
       postgres:
         condition: service_healthy

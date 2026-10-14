@@ -183,6 +183,7 @@ model Lead {
 
   activities LeadActivity[]
   followUps  FollowUp[]
+  emails     EmailMessage[]
 
   @@map("leads")
 }
@@ -269,4 +270,66 @@ model ApiKey {
   workspaceId String
 
   @@map("api_keys")
+}
+
+// ============ E-MAIL (Amazon SES) ============
+
+// Um e-mail enviado a um lead. Os contadores/datas são atualizados pelos eventos do SES (via SNS).
+model EmailMessage {
+  id           String    @id @default(cuid())
+  toEmail      String
+  fromEmail    String
+  subject      String
+  bodyText     String
+  sesMessageId String?   @unique
+  // queued → sent → delivered | bounced | complained | failed
+  status       String    @default("queued")
+  error        String?
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  bouncedAt    DateTime?
+  complainedAt DateTime?
+  firstOpenedAt  DateTime?
+  openCount      Int       @default(0)
+  firstClickedAt DateTime?
+  clickCount     Int       @default(0)
+  repliedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  workspaceId String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId      String
+  campaignId  String?
+
+  events EmailEvent[]
+
+  @@index([workspaceId, createdAt])
+  @@index([campaignId])
+  @@map("email_messages")
+}
+
+model EmailEvent {
+  id         String   @id @default(cuid())
+  type       String   // send | delivery | bounce | complaint | open | click | reject | reply
+  data       Json?
+  occurredAt DateTime @default(now())
+
+  message   EmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId String
+
+  @@index([messageId])
+  @@map("email_events")
+}
+
+// Endereços que nunca mais recebem: descadastro, devolução permanente ou reclamação de spam.
+model EmailSuppression {
+  id          String   @id @default(cuid())
+  workspaceId String
+  email       String
+  reason      String   // unsubscribe | bounce | complaint
+  createdAt   DateTime @default(now())
+
+  @@unique([workspaceId, email])
+  @@map("email_suppressions")
 }

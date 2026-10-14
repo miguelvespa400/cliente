@@ -15,6 +15,7 @@ import { IntegrationsModule } from "./integrations/integrations.module";
 import { ExportModule } from "./export/export.module";
 import { AuthModule } from "./auth/auth.module";
 import { WorkspaceModule } from "./workspace/workspace.module";
+import { EmailModule } from "./email/email.module";
 
 @Module({
   imports: [
@@ -36,6 +37,10 @@ import { WorkspaceModule } from "./workspace/workspace.module";
         AUTH_THROTTLE_LIMIT: Joi.number().default(10),
         REGISTRATION_OPEN: Joi.string().valid("true", "false").default("true"),
         REGISTRATION_ALLOWED_EMAILS: Joi.string().allow("").default(""),
+        // URL pública da API (links de descadastro e webhook do SNS). Em produção: https://seu-dominio
+        API_PUBLIC_URL: Joi.string().default("http://localhost:3001"),
+        // Tópicos SNS aceitos na rota de eventos do SES (separados por vírgula). Vazio = rota recusa tudo.
+        SES_SNS_TOPIC_ARN: Joi.string().allow("").default(""),
         SCRAPER_MOCK_FALLBACK: Joi.string().valid("true", "false").default("false"),
       }),
       validationOptions: { abortEarly: true },
@@ -57,6 +62,7 @@ import { WorkspaceModule } from "./workspace/workspace.module";
     ExportModule,
     AuthModule,
     WorkspaceModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [

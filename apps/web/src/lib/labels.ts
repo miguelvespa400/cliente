@@ -28,6 +28,9 @@ export const PRIORITY_LABELS: Record<string, string> = {
 export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
   crm_update: "Atualização no CRM",
   whatsapp_sent: "WhatsApp enviado",
+  email_sent: "E-mail enviado",
+  email_replied: "Respondeu o e-mail",
+  email_unsubscribed: "Descadastrou-se dos e-mails",
 };
 
 export const INDUSTRY_LABELS: Record<string, string> = {

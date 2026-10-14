@@ -12,6 +12,7 @@ import { ArrowLeft, Phone, Globe, MapPin, Star, Mail, MessageCircle, Loader2, Co
 import { gmailComposeUrl, whatsappUrl } from "@/lib/outreach";
 import { useLead } from "@/hooks/use-leads";
 import { WhatsAppSendDialog } from "@/components/leads/whatsapp-send-dialog";
+import { LeadEmailPanel } from "@/components/leads/lead-email-panel";
 import { api } from "@/lib/api";
 import { ACTIVITY_TYPE_LABELS, INDUSTRY_LABELS, labelFor } from "@/lib/labels";
 
@@ -31,6 +32,7 @@ export function LeadDetail({ id }: { id: string }) {
   // WhatsApp Cloud API conectado em Integrações? Se não, o botão abre o wa.me com a mensagem pronta.
   const [waConfig, setWaConfig] = useState<Record<string, string> | null>(null);
   const [waOpen, setWaOpen] = useState(false);
+  const [sesConnected, setSesConnected] = useState(false);
 
   useEffect(() => {
     api
@@ -38,6 +40,7 @@ export function LeadDetail({ id }: { id: string }) {
       .then((list) => {
         const cfg = list.find((i) => i.type === "whatsapp")?.config;
         setWaConfig(cfg?.accessToken && cfg?.phoneNumberId ? cfg : null);
+        setSesConnected(!!list.find((i) => i.type === "ses")?.config?.fromEmail);
       })
       .catch(() => setWaConfig(null));
   }, []);
@@ -132,17 +135,28 @@ export function LeadDetail({ id }: { id: string }) {
             </CardHeader>
             <CardContent className="space-y-3">
               {[
-                { icon: Phone, label: "Telefone", value: lead.phone },
-                { icon: Mail, label: "E-mail", value: lead.email ?? undefined },
-                { icon: Globe, label: "Site", value: lead.website },
-                { icon: MapPin, label: "Endereço", value: lead.address },
-                { icon: Star, label: "Avaliação", value: lead.rating ? `${lead.rating} estrelas no Google Maps` : undefined },
+                { icon: Phone, label: "Telefone", value: lead.phone, href: whatsappUrl(lead.phone, "") ?? undefined },
+                { icon: Mail, label: "E-mail", value: lead.email ?? undefined, href: lead.email ? `mailto:${lead.email}` : undefined },
+                { icon: Globe, label: "Site", value: lead.website, href: lead.website ? (/^https?:\/\//i.test(lead.website) ? lead.website : `https://${lead.website}`) : undefined },
+                { icon: MapPin, label: "Endereço", value: lead.address, href: lead.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.address)}` : undefined },
+                { icon: Star, label: "Avaliação", value: lead.rating ? `${lead.rating} estrelas no Google Maps` : undefined, href: undefined },
               ]
                 .filter((i) => i.value)
                 .map((item) => (
                   <div key={item.label} className="flex items-center gap-3">
                     <item.icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-sm flex-1 break-all">{item.value}</span>
+                    {item.href ? (
+                      <a
+                        href={item.href}
+                        target={item.href.startsWith("http") ? "_blank" : undefined}
+                        rel="noreferrer"
+                        className="text-sm flex-1 break-all text-primary hover:underline"
+                      >
+                        {item.value}
+                      </a>
+                    ) : (
+                      <span className="text-sm flex-1 break-all">{item.value}</span>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -186,6 +200,11 @@ export function LeadDetail({ id }: { id: string }) {
                       <p className="font-medium text-muted-foreground mb-1.5">Assunto: {lead.marketingContent.email.subject}</p>
                       <p className="whitespace-pre-wrap">{lead.marketingContent.email.body}</p>
                     </div>
+                    {sesConnected && (
+                      <div className="mt-3">
+                        <LeadEmailPanel leadId={id} hasEmail={!!lead.email} onSent={refresh} />
+                      </div>
+                    )}
                   </div>
                 )}
                 {lead.marketingContent.whatsapp && (

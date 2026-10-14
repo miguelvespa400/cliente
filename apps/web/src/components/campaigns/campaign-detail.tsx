@@ -1,18 +1,20 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, Download, Users, Star, TrendingUp, MapPin, Loader2, Search, List, Map as MapIcon } from "lucide-react";
+import { ArrowLeft, Download, Users, Star, TrendingUp, MapPin, Loader2, Search, List, Map as MapIcon, RotateCcw, Pencil, Check, X, Settings2 } from "lucide-react";
 import { useCampaign } from "@/hooks/use-campaigns";
 import { useLeads } from "@/hooks/use-leads";
 import { LeadsTable } from "@/components/leads/leads-table";
+import { CampaignEmailCard } from "@/components/campaigns/campaign-email-card";
 import { api } from "@/lib/api";
 import { INDUSTRY_LABELS, labelFor } from "@/lib/labels";
 
@@ -33,6 +35,38 @@ const item = {
 export function CampaignDetail({ id }: { id: string }) {
   const { campaign, loading, refresh } = useCampaign(id);
   const { leads, loading: leadsLoading, refresh: refreshLeads } = useLeads({ campaignId: id });
+
+  const [starting, setStarting] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
+  const saveName = async () => {
+    const name = nameDraft.trim();
+    if (!name) return;
+    setSavingName(true);
+    try {
+      await api.patch(`/campaigns/${id}`, { name });
+      await refresh();
+      setEditingName(false);
+    } catch (e) {
+      console.error("Failed to rename campaign:", e);
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const startCampaign = async () => {
+    setStarting(true);
+    try {
+      await api.post(`/scraper/campaigns/${id}/start`, {});
+      await refresh();
+    } catch (e) {
+      console.error("Failed to start campaign:", e);
+    } finally {
+      setStarting(false);
+    }
+  };
 
   // Poll while campaign is running
   useEffect(() => {
@@ -80,7 +114,42 @@ export function CampaignDetail({ id }: { id: string }) {
         </Button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold truncate">{campaign.name}</h1>
+            {editingName ? (
+              <form
+                className="flex items-center gap-1"
+                onSubmit={(e) => { e.preventDefault(); saveName(); }}
+              >
+                <Input
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  onKeyDown={(e) => e.key === "Escape" && setEditingName(false)}
+                  className="h-8 w-72 text-base font-semibold"
+                  autoFocus
+                  disabled={savingName}
+                />
+                <Button type="submit" variant="ghost" size="icon" className="h-8 w-8" disabled={savingName || !nameDraft.trim()} aria-label="Salvar nome">
+                  {savingName ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                </Button>
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingName(false)} aria-label="Cancelar">
+                  <X className="h-4 w-4" />
+                </Button>
+              </form>
+            ) : (
+              <>
+                <h1 className="text-xl font-bold truncate">{campaign.name}</h1>
+                {campaign.status === "draft" && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 opacity-60 hover:opacity-100"
+                    onClick={() => { setNameDraft(campaign.name); setEditingName(true); }}
+                    aria-label="Editar nome"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </>
+            )}
             {campaign.status === "completed" && <Badge variant="success">Concluída</Badge>}
             {campaign.status === "running" && (
               <Badge variant="info" className="flex items-center gap-1">
@@ -88,10 +157,22 @@ export function CampaignDetail({ id }: { id: string }) {
               </Badge>
             )}
             {campaign.status === "draft" && <Badge variant="secondary">Rascunho</Badge>}
+            {campaign.status === "failed" && <Badge variant="destructive">Falhou</Badge>}
           </div>
           <p className="text-muted-foreground text-sm">{labelFor(INDUSTRY_LABELS, campaign.industry)} · {campaign.location}</p>
         </div>
         <div className="flex items-center gap-2">
+          {campaign.status === "draft" && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/campaigns/editar?id=${id}`}><Settings2 className="mr-2 h-4 w-4" />Editar</Link>
+            </Button>
+          )}
+          {(campaign.status === "failed" || campaign.status === "draft") && (
+            <Button size="sm" onClick={startCampaign} disabled={starting}>
+              {starting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
+              {campaign.status === "failed" ? "Tentar novamente" : "Iniciar"}
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => api.download(`/export/leads/csv?campaignId=${id}`, `leads-${id}.csv`)}>
             <Download className="mr-2 h-4 w-4" />CSV
           </Button>
@@ -122,6 +203,12 @@ export function CampaignDetail({ id }: { id: string }) {
           </Card>
         ))}
       </motion.div>
+
+      {campaign.status === "completed" && (
+        <motion.div variants={item}>
+          <CampaignEmailCard campaignId={id} totalLeads={campaign.totalLeads} onLeadsChanged={refreshLeads} />
+        </motion.div>
+      )}
 
       {campaign.status === "running" && (
         <motion.div variants={item}>

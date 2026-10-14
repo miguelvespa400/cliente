@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ScraperController } from "./scraper.controller";
 import { ScraperProcessor } from "./scraper.processor";
 import { GoogleMapsScraperService } from "./google-maps.scraper";
+import { EmailFinderService } from "./email-finder.service";
 import { CampaignsModule } from "../campaigns/campaigns.module";
 import { LeadsModule } from "../leads/leads.module";
 import { AiModule } from "../ai/ai.module";
@@ -29,6 +30,7 @@ import { IntegrationsModule } from "../integrations/integrations.module";
     IntegrationsModule,
   ],
   controllers: [ScraperController],
-  providers: [ScraperProcessor, GoogleMapsScraperService],
+  providers: [ScraperProcessor, GoogleMapsScraperService, EmailFinderService],
+  exports: [EmailFinderService],
 })
 export class ScraperModule {}

@@ -8,6 +8,8 @@ import { LeadIntelligenceService } from "../ai/lead-intelligence.service";
 import { MarketingAiService } from "../ai/marketing-ai.service";
 import { GoogleMapsScraperService, type ScrapedBusiness } from "./google-maps.scraper";
 import { NotifierService } from "../integrations/notifier.service";
+import { dedupeKeys, dedupeLeads } from "./dedupe";
+import { EmailFinderService } from "./email-finder.service";
 
 export interface ScraperJobData {
   campaignId: string;
@@ -35,6 +37,7 @@ export class ScraperProcessor extends WorkerHost {
     private googleMaps: GoogleMapsScraperService,
     private config: ConfigService,
     private notifier: NotifierService,
+    private emailFinder: EmailFinderService,
   ) {
     super();
   }
@@ -58,6 +61,12 @@ export class ScraperProcessor extends WorkerHost {
       }
 
       await this.campaigns.updateStatus(campaignId, "running", 30);
+
+      // O Google Maps quase nunca traz e-mail: procura no site de quem tem site.
+      const lookups = rawLeads.map((l) => (!l.email && l.website ? l.website : null));
+      const foundEmails = await this.emailFinder.findMany(lookups);
+      foundEmails.forEach((email, i) => { if (email) rawLeads[i].email = email; });
+      this.logger.log(`E-mails encontrados nos sites: ${foundEmails.filter(Boolean).length}/${lookups.filter(Boolean).length}`);
 
       const scoredLeads = this.leadIntelligence.scoreLeads(rawLeads, data.industry);
       await this.campaigns.updateStatus(campaignId, "running", 60);
@@ -157,16 +166,12 @@ export class ScraperProcessor extends WorkerHost {
 
     const results = await this.scrapeWithPlaywright(data, campaignId, combos);
 
-    // Deduplicate by name+address
-    const seen = new Set<string>();
-    return results
-      .filter((b) => {
-        const key = `${b.name.toLowerCase()}|${b.address.toLowerCase()}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .slice(0, data.maxResults);
+    // Mesma empresa = mesmo nome, telefone ou e-mail — dentro da coleta e contra os
+    // leads que o workspace já tem (em qualquer campanha), para não abordar duas vezes.
+    const existing = await this.leads.existingDedupeKeys(data.workspaceId);
+    const unique = dedupeLeads(results).filter((b) => !dedupeKeys(b).some((k) => existing.has(k)));
+    this.logger.log(`Dedupe: ${results.length} coletados → ${unique.length} novos e únicos`);
+    return unique.slice(0, data.maxResults);
   }
 
   private async scrapeWithPlaywright(
