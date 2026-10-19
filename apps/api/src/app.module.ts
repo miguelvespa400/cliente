@@ -15,6 +15,7 @@ import { IntegrationsModule } from "./integrations/integrations.module";
 import { ExportModule } from "./export/export.module";
 import { AuthModule } from "./auth/auth.module";
 import { WorkspaceModule } from "./workspace/workspace.module";
+import { TasksModule } from "./tasks/tasks.module";
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { WorkspaceModule } from "./workspace/workspace.module";
     ExportModule,
     AuthModule,
     WorkspaceModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [

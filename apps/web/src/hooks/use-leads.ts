@@ -2,6 +2,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 
+export type CrmStatus = "new" | "contacted" | "replied" | "meeting" | "proposal" | "won" | "lost";
+
+export interface Task {
+  id: string;
+  leadId: string;
+  type: string;
+  note: string;
+  scheduledAt: string;
+  done: boolean;
+  doneAt: string | null;
+  createdAt: string;
+  lead?: { id: string; name: string; phone: string | null; crmStatus: CrmStatus | null; ownerId: string | null; owner: { id: string; name: string } | null };
+}
+
 export interface Lead {
   id: string;
   name: string;
@@ -15,13 +29,20 @@ export interface Lead {
   reviewCount?: number | null;
   score: number;
   priority: "HIGH" | "MEDIUM" | "LOW";
-  crmStatus: "new" | "contacted" | "replied" | "meeting" | "proposal" | "won" | "lost";
-  crmNotes?: string;
+  crmStatus: CrmStatus;
+  crmNotes?: string | null;
   hasWebsite: boolean;
   industry?: string;
-  category?: string;
-  campaignId: string;
-  campaign?: { id: string; name: string };
+  category?: string | null;
+  source?: string;
+  contactName?: string | null;
+  dealValue?: number | null;
+  expectedCloseDate?: string | null;
+  ownerId?: string | null;
+  owner?: { id: string; name: string } | null;
+  tasks?: Task[];
+  campaignId: string | null;
+  campaign?: { id: string; name: string } | null;
   marketingContent?: {
     email?: { subject: string; body: string };
     whatsapp?: string;
@@ -50,6 +71,7 @@ interface LeadFilter {
   q?: string;
   priority?: string;
   status?: string;
+  ownerId?: string;
   page?: number;
   limit?: number;
 }
@@ -60,7 +82,7 @@ export function useLeads(filter: LeadFilter = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { campaignId, q, priority, status, page = 1, limit = 50 } = filter;
+  const { campaignId, q, priority, status, ownerId, page = 1, limit = 50 } = filter;
 
   const refresh = useCallback(async () => {
     try {
@@ -69,6 +91,7 @@ export function useLeads(filter: LeadFilter = {}) {
       if (q) params.set("q", q);
       if (priority) params.set("priority", priority);
       if (status) params.set("status", status);
+      if (ownerId) params.set("ownerId", ownerId);
       params.set("page", String(page));
       params.set("limit", String(limit));
 
@@ -81,7 +104,7 @@ export function useLeads(filter: LeadFilter = {}) {
     } finally {
       setLoading(false);
     }
-  }, [campaignId, q, priority, status, page, limit]);
+  }, [campaignId, q, priority, status, ownerId, page, limit]);
 
   useEffect(() => { setLoading(true); refresh(); }, [refresh]);
   return { leads, total, loading, error, refresh };
@@ -92,9 +115,9 @@ export function useLead(id: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Recarrega sem voltar ao skeleton (ações na página atualizam o lead "por baixo").
   const refresh = useCallback(async () => {
     try {
-      setLoading(true);
       const data = await api.get<Lead>(`/leads/${id}`);
       setLead(data);
       setError(null);
@@ -105,6 +128,6 @@ export function useLead(id: string) {
     }
   }, [id]);
 
-  useEffect(() => { refresh(); }, [refresh]);
-  return { lead, loading, error, refresh };
+  useEffect(() => { setLoading(true); refresh(); }, [refresh]);
+  return { lead, loading, error, refresh, setLead };
 }

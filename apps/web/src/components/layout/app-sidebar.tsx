@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useRouter, usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Megaphone, Users, BarChart3, Settings, Zap, ChevronDown, Building2, LogOut,
+  LayoutDashboard, Megaphone, Users, BarChart3, Settings, Zap, ChevronDown, Building2, LogOut, KanbanSquare, ListChecks,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -17,10 +17,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
+import { useTaskSummary } from "@/hooks/use-crm";
 
 const navItems = [
   { title: "Painel", href: "/dashboard", icon: LayoutDashboard },
-  { title: "Campanhas", href: "/campaigns", icon: Megaphone, badge: "Novo" },
+  { title: "Campanhas", href: "/campaigns", icon: Megaphone },
+  { title: "Funil", href: "/pipeline", icon: KanbanSquare },
+  { title: "Tarefas", href: "/tasks", icon: ListChecks },
   { title: "Leads", href: "/leads", icon: Users },
   { title: "Análises", href: "/analytics", icon: BarChart3 },
 ];
@@ -34,6 +37,9 @@ export function SidebarContent() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, workspace, logout } = useAuth();
+  // Lembrete: atrasadas + de hoje no item "Tarefas".
+  const { summary } = useTaskSummary();
+  const pending = (summary?.overdue ?? 0) + (summary?.today ?? 0);
 
   const handleLogout = () => {
     logout();
@@ -87,9 +93,15 @@ export function SidebarContent() {
               )}
               <item.icon className="w-4 h-4 flex-shrink-0 relative z-10" />
               <span className="flex-1 relative z-10">{item.title}</span>
-              {"badge" in item && item.badge && (
-                <Badge className="relative z-10 bg-accent/20 text-accent border-0 text-[10px] py-0 px-1.5">
-                  {item.badge}
+              {item.href === "/tasks" && pending > 0 && (
+                <Badge
+                  className={cn(
+                    "relative z-10 border-0 text-[10px] py-0 px-1.5",
+                    summary?.overdue ? "bg-destructive text-destructive-foreground" : "bg-accent/20 text-accent",
+                  )}
+                  title={`${summary?.overdue ?? 0} atrasada(s) · ${summary?.today ?? 0} para hoje`}
+                >
+                  {pending}
                 </Badge>
               )}
             </Link>

@@ -26,8 +26,32 @@ export const PRIORITY_LABELS: Record<string, string> = {
 };
 
 export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
-  crm_update: "Atualização no CRM",
+  crm_update: "Mudança de etapa",
   whatsapp_sent: "WhatsApp enviado",
+  lead_created: "Lead cadastrado",
+  deal_updated: "Negócio atualizado",
+  task_created: "Tarefa agendada",
+  task_done: "Tarefa concluída",
+};
+
+/** Etapas do funil, na ordem das colunas do Kanban. */
+export const CRM_STAGES: Array<{ status: string; label: string; dot: string }> = [
+  { status: "new", label: "Novo", dot: "bg-slate-400" },
+  { status: "contacted", label: "Contatado", dot: "bg-sky-500" },
+  { status: "replied", label: "Respondeu", dot: "bg-indigo-500" },
+  { status: "meeting", label: "Reunião", dot: "bg-amber-500" },
+  { status: "proposal", label: "Proposta", dot: "bg-orange-500" },
+  { status: "won", label: "Ganho", dot: "bg-emerald-500" },
+  { status: "lost", label: "Perdido", dot: "bg-rose-500" },
+];
+
+export const TASK_TYPE_LABELS: Record<string, string> = {
+  call: "Ligar",
+  whatsapp: "WhatsApp",
+  email: "E-mail",
+  meeting: "Reunião",
+  visit: "Visita",
+  other: "Outro",
 };
 
 export const INDUSTRY_LABELS: Record<string, string> = {

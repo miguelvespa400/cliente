@@ -37,3 +37,7 @@ apps/web/next-env.d.ts
 # Test reports
 playwright-report/
 test-results/
+
+# Cloudflare Worker (segredos locais e build do painel)
+.dev.vars
+.wrangler/

@@ -8,12 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Phone, Globe, MapPin, Star, Mail, MessageCircle, Loader2, Copy, Instagram, Send } from "lucide-react";
-import { gmailComposeUrl, whatsappUrl } from "@/lib/outreach";
+import { ArrowLeft, Phone, Globe, MapPin, Star, Mail, MessageCircle, Loader2, Copy, Instagram, Send, User2, Pencil, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { gmailComposeUrl, toWhatsAppNumber, whatsappUrl } from "@/lib/outreach";
 import { useLead } from "@/hooks/use-leads";
 import { WhatsAppSendDialog } from "@/components/leads/whatsapp-send-dialog";
 import { api } from "@/lib/api";
-import { ACTIVITY_TYPE_LABELS, INDUSTRY_LABELS, labelFor } from "@/lib/labels";
+import { ACTIVITY_TYPE_LABELS, CRM_STAGES, INDUSTRY_LABELS, labelFor } from "@/lib/labels";
+import { formatDateTime } from "@/lib/utils";
+import { LeadFormDialog } from "@/components/crm/lead-form-dialog";
+import { DealCard, NotesCard, TasksCard } from "@/components/crm/lead-crm-panels";
 
 const container = {
   hidden: { opacity: 0 },
@@ -25,9 +30,11 @@ const item = {
 };
 
 export function LeadDetail({ id }: { id: string }) {
+  const router = useRouter();
   const { lead, loading, refresh } = useLead(id);
   const [crmStatus, setCrmStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   // WhatsApp Cloud API conectado em Integrações? Se não, o botão abre o wa.me com a mensagem pronta.
   const [waConfig, setWaConfig] = useState<Record<string, string> | null>(null);
   const [waOpen, setWaOpen] = useState(false);
@@ -48,16 +55,29 @@ export function LeadDetail({ id }: { id: string }) {
     try {
       await api.patch(`/leads/${id}/crm`, { crmStatus });
       await refresh();
+      setCrmStatus(null);
+      toast.success(`Etapa alterada para ${labelFor(Object.fromEntries(CRM_STAGES.map((s) => [s.status, s.label])), crmStatus)}`);
     } catch (e) {
-      console.error("CRM update failed:", e);
+      toast.error(e instanceof Error ? e.message : "Não foi possível alterar a etapa");
     } finally {
       setSaving(false);
     }
   };
 
+  const handleDelete = async () => {
+    if (!lead || !window.confirm(`Excluir ${lead.name}? O histórico e as tarefas deste lead também serão apagados.`)) return;
+    try {
+      await api.delete(`/leads/${id}`);
+      toast.success("Lead excluído");
+      router.push("/leads");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível excluir");
+    }
+  };
+
   if (loading) {
     return (
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-6 max-w-5xl">
         <div className="flex items-center gap-3">
           <Skeleton className="h-9 w-9 rounded-md" />
           <div className="flex-1 space-y-2">
@@ -103,7 +123,7 @@ export function LeadDetail({ id }: { id: string }) {
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-6 max-w-4xl"
+      className="space-y-6 max-w-5xl"
     >
       <motion.div variants={item} className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
@@ -114,29 +134,56 @@ export function LeadDetail({ id }: { id: string }) {
             <h1 className="text-xl font-bold">{lead.name}</h1>
             {lead.priority === "HIGH" && <Badge variant="success">Alta prioridade</Badge>}
             {lead.hasWebsite && <Badge variant="info">Tem site</Badge>}
+            {lead.source === "manual" && <Badge variant="secondary">Cadastro manual</Badge>}
           </div>
-          <p className="text-sm text-muted-foreground">{[lead.category || labelFor(INDUSTRY_LABELS, lead.industry), lead.address].filter(Boolean).join(" · ")}</p>
+          <p className="text-sm text-muted-foreground">
+            {[lead.category || labelFor(INDUSTRY_LABELS, lead.industry), lead.address].filter(Boolean).join(" · ")}
+            {lead.campaign && (
+              <> · <Link href={`/campaigns/detalhe?id=${lead.campaign.id}`} className="hover:text-primary hover:underline">{lead.campaign.name}</Link></>
+            )}
+          </p>
         </div>
-        <div className="text-right flex-shrink-0">
-          <div className="text-2xl font-bold text-primary">{lead.score}</div>
-          <div className="text-xs text-muted-foreground">Pontuação IA</div>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}><Pencil className="w-3.5 h-3.5" />Editar</Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={handleDelete} aria-label="Excluir lead">
+            <Trash2 className="w-4 h-4" />
+          </Button>
         </div>
+        {lead.source !== "manual" && (
+          <div className="text-right flex-shrink-0 hidden sm:block">
+            <div className="text-2xl font-bold text-primary">{lead.score}</div>
+            <div className="text-xs text-muted-foreground">Pontuação IA</div>
+          </div>
+        )}
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div variants={item} className="lg:col-span-2 space-y-4">
           {/* Contact Info */}
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 flex-row items-center justify-between space-y-0 gap-2">
               <CardTitle className="text-base">Informações de contato</CardTitle>
+              <div className="flex gap-1.5">
+                {lead.phone && (
+                  <Button size="sm" variant="outline" className="h-7 text-xs" asChild>
+                    <a href={`tel:${lead.phone.replace(/[^\d+]/g, "")}`}><Phone className="w-3 h-3" />Ligar</a>
+                  </Button>
+                )}
+                {toWhatsAppNumber(lead.phone) && (
+                  <Button size="sm" variant="outline" className="h-7 text-xs" asChild>
+                    <a href={`https://wa.me/${toWhatsAppNumber(lead.phone)}`} target="_blank" rel="noreferrer"><MessageCircle className="w-3 h-3" />WhatsApp</a>
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {[
+                { icon: User2, label: "Contato", value: lead.contactName ?? undefined },
                 { icon: Phone, label: "Telefone", value: lead.phone },
                 { icon: Mail, label: "E-mail", value: lead.email ?? undefined },
                 { icon: Globe, label: "Site", value: lead.website },
                 { icon: MapPin, label: "Endereço", value: lead.address },
-                { icon: Star, label: "Avaliação", value: lead.rating ? `${lead.rating} estrelas no Google Maps` : undefined },
+                { icon: Star, label: "Avaliação", value: lead.rating && lead.rating !== "N/A" ? `${lead.rating} estrelas no Google Maps` : undefined },
               ]
                 .filter((i) => i.value)
                 .map((item) => (
@@ -156,6 +203,8 @@ export function LeadDetail({ id }: { id: string }) {
                 ))}
             </CardContent>
           </Card>
+
+          <TasksCard lead={lead} onChanged={refresh} />
 
           {/* AI Marketing Content */}
           {lead.marketingContent && (
@@ -239,24 +288,22 @@ export function LeadDetail({ id }: { id: string }) {
         <motion.div variants={item} className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Status no CRM</CardTitle>
+              <CardTitle className="text-base">Etapa do funil</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Select
-                defaultValue={lead.crmStatus}
-                onValueChange={(v) => setCrmStatus(v)}
+                value={crmStatus ?? lead.crmStatus}
+                onValueChange={(v) => setCrmStatus(v === lead.crmStatus ? null : v)}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="new">🔵 Novo</SelectItem>
-                  <SelectItem value="contacted">📤 Contatado</SelectItem>
-                  <SelectItem value="replied">💬 Respondeu</SelectItem>
-                  <SelectItem value="meeting">📅 Reunião</SelectItem>
-                  <SelectItem value="proposal">📄 Proposta</SelectItem>
-                  <SelectItem value="won">✅ Ganho</SelectItem>
-                  <SelectItem value="lost">❌ Perdido</SelectItem>
+                  {CRM_STAGES.map((s) => (
+                    <SelectItem key={s.status} value={s.status}>
+                      <span className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${s.dot}`} />{s.label}</span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Button
@@ -265,10 +312,14 @@ export function LeadDetail({ id }: { id: string }) {
                 onClick={handleCrmUpdate}
                 disabled={saving || !crmStatus}
               >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Atualizar status"}
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Mudar etapa"}
               </Button>
             </CardContent>
           </Card>
+
+          <DealCard lead={lead} onEdit={() => setEditing(true)} />
+
+          <NotesCard key={lead.crmNotes ?? ""} lead={lead} onSaved={refresh} />
 
           <Card>
             <CardHeader className="pb-3">
@@ -278,7 +329,10 @@ export function LeadDetail({ id }: { id: string }) {
               <div className="space-y-3">
                 {(lead.activities || []).map((a) => (
                   <div key={a.id} className="text-xs border-l-2 border-primary/30 pl-3">
-                    <p className="font-medium capitalize text-muted-foreground">{labelFor(ACTIVITY_TYPE_LABELS, a.type)}</p>
+                    <p className="font-medium text-muted-foreground">
+                      {labelFor(ACTIVITY_TYPE_LABELS, a.type)}
+                      {a.createdAt && <span className="font-normal"> · {formatDateTime(a.createdAt)}</span>}
+                    </p>
                     <p className="mt-0.5">{a.note}</p>
                   </div>
                 ))}
@@ -290,6 +344,8 @@ export function LeadDetail({ id }: { id: string }) {
           </Card>
         </motion.div>
       </div>
+
+      {editing && <LeadFormDialog lead={lead} onClose={() => setEditing(false)} onSaved={() => refresh()} />}
 
       {waOpen && lead.phone && (
         <WhatsAppSendDialog

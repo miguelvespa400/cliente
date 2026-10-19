@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Phone, Globe, MapPin, Star, ChevronRight, Users } from "lucide-react";
 import type { Lead } from "@/hooks/use-leads";
 import { CRM_STATUS_LABELS, PRIORITY_LABELS, labelFor } from "@/lib/labels";
+import { formatCurrency, getInitials } from "@/lib/utils";
 
 const container = {
   hidden: { opacity: 0 },
@@ -98,7 +99,15 @@ export function LeadsTable({ leads, loading }: Props) {
             </div>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
-            {lead.rating && (
+            {lead.dealValue != null && (
+              <span className="text-sm font-semibold hidden md:inline">{formatCurrency(lead.dealValue)}</span>
+            )}
+            {lead.owner && (
+              <span className="hidden md:flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[10px] font-semibold" title={`Responsável: ${lead.owner.name}`}>
+                {getInitials(lead.owner.name)}
+              </span>
+            )}
+            {lead.rating && lead.rating !== "N/A" && (
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Star className="w-3 h-3 text-warning" />{lead.rating}
                 {lead.reviewCount != null && ` (${lead.reviewCount})`}
