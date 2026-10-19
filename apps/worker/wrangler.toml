@@ -21,6 +21,8 @@ migrations_dir = "migrations"
 [vars]
 # Cadastro fechado: o 1º usuário vira dono; outros só se o e-mail estiver aqui (separados por vírgula).
 REGISTRATION_ALLOWED_EMAILS = ""
+# Links do resumo diário das tarefas (Telegram/Webhook).
+APP_URL = "https://prospex.contato2021.workers.dev"
 
 # Segredos (definidos com `wrangler secret put`, nunca neste arquivo):
 #   JWT_SECRET      — assina as sessões

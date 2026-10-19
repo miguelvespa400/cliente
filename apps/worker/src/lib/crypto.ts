@@ -90,10 +90,15 @@ export async function signJwt(claims: Omit<SessionClaims, "exp">, secret: string
 export async function verifyJwt(token: string, secret: string): Promise<SessionClaims | null> {
   const [header, payload, sig] = token.split(".");
   if (!header || !payload || !sig) return null;
-  const ok = await crypto.subtle.verify("HMAC", await hmacKey(secret), unb64url(sig), enc.encode(`${header}.${payload}`));
-  if (!ok) return null;
-  const claims = JSON.parse(dec.decode(unb64url(payload))) as SessionClaims;
-  return claims.exp > Date.now() / 1000 ? claims : null;
+  // Token malformado (base64/JSON inválido) = sessão inválida (401), não erro interno.
+  try {
+    const ok = await crypto.subtle.verify("HMAC", await hmacKey(secret), unb64url(sig), enc.encode(`${header}.${payload}`));
+    if (!ok) return null;
+    const claims = JSON.parse(dec.decode(unb64url(payload))) as SessionClaims;
+    return claims.exp > Date.now() / 1000 ? claims : null;
+  } catch {
+    return null;
+  }
 }
 
 // ── Segredos de integração (AES-256-GCM) ───────────────────────────────────
