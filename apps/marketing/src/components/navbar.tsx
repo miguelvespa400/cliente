@@ -68,7 +68,7 @@ export function Navbar() {
             href={SIGNUP_URL}
             className="bg-gradient-brand text-white text-sm px-4 py-1.5 rounded-lg font-medium transition-all shadow-glow hover:brightness-110"
           >
-            Get started
+            Começar
           </Link>
         </div>
 
@@ -108,7 +108,7 @@ export function Navbar() {
                   href={SIGNUP_URL}
                   className="bg-gradient-brand text-white text-sm px-4 py-1.5 rounded-lg font-medium shadow-glow"
                 >
-                  Get started
+                  Começar
                 </Link>
               </div>
             </div>

@@ -45,7 +45,7 @@ export function Hero() {
             href={SIGNUP_URL}
             className="flex items-center gap-2 bg-gradient-brand text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-glow hover:brightness-110 hover:-translate-y-0.5 text-sm"
           >
-            Start for free <ArrowRight className="w-4 h-4" />
+            Começar grátis <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href={REPO_URL}

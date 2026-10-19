@@ -45,7 +45,7 @@ export function OpenSource() {
             href={SIGNUP_URL}
             className="flex items-center gap-2 bg-gradient-brand text-white px-6 py-3 rounded-xl font-semibold transition-all text-sm shadow-glow hover:-translate-y-0.5"
           >
-            Try it now <ArrowRight className="w-4 h-4" />
+            Acessar o sistema <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 

@@ -1,8 +1,7 @@
 name: Deploy site (GitHub Pages)
 
-# Publica no GitHub Pages: site de apresentação (apps/marketing) em /<repo>/ e o painel
-# (apps/web) em modo demonstração em /<repo>/app/. O painel real precisa de API + PostgreSQL
-# + Redis; a demo responde no navegador com dados fictícios.
+# Publica no GitHub Pages o site de apresentação (apps/marketing). Os botões "Começar"
+# levam ao sistema em produção, no Cloudflare Workers (apps/worker), com dados reais.
 on:
   push:
     branches: [main]
@@ -17,6 +16,9 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  PRODUCTION_URL: https://prospex.contato2021.workers.dev
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,7 +31,7 @@ jobs:
           cache: pnpm
       - id: pages
         uses: actions/configure-pages@v5
-      - run: pnpm install --frozen-lockfile --filter @prospex/marketing... --filter @prospex/web...
+      - run: pnpm install --frozen-lockfile --filter @prospex/marketing...
       - name: Build site de apresentação (/<repo>/)
         run: pnpm --filter @prospex/marketing build
         env:
@@ -37,19 +39,17 @@ jobs:
           BASE_PATH: /${{ github.event.repository.name }}
           NEXT_PUBLIC_REPO_URL: ${{ github.server_url }}/${{ github.repository }}
           # URL absoluta: o <Link> do Next prefixaria o basePath num caminho relativo.
-          NEXT_PUBLIC_SIGNUP_URL: ${{ steps.pages.outputs.base_url }}/app/
-      # Painel em modo demonstração: dados fictícios, sem API/banco (lib/demo.ts).
-      - name: Build demo do painel (/<repo>/app/)
-        run: |
-          pnpm --filter @prospex/web build
-          node apps/web/scripts/flatten-rsc.mjs apps/web/out
-        env:
-          STATIC_EXPORT: "true"
-          NEXT_PUBLIC_DEMO_MODE: "true"
-          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}/app
+          NEXT_PUBLIC_SIGNUP_URL: ${{ env.PRODUCTION_URL }}/login/
+      # O endereço antigo da demonstração (/<repo>/app/) passa a levar ao sistema real.
       - run: |
-          cp -r apps/web/out apps/marketing/out/app
           touch apps/marketing/out/.nojekyll
+          mkdir -p apps/marketing/out/app
+          cat > apps/marketing/out/app/index.html <<EOF
+          <!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+          <meta http-equiv="refresh" content="0; url=${PRODUCTION_URL}/login/">
+          <title>Prospex</title></head>
+          <body><p>Redirecionando para <a href="${PRODUCTION_URL}/login/">o Prospex</a>...</p></body></html>
+          EOF
       - uses: actions/upload-pages-artifact@v3
         with:
           path: apps/marketing/out
