@@ -30,7 +30,7 @@ test.describe("Export", () => {
     if (!hasCampaigns) { test.skip(); return; }
 
     await firstLink.click();
-    await page.waitForURL(/\/campaigns\/[a-z0-9-]+$/);
+    await page.waitForURL(/\/campaigns\/detalhe\/?\?id=[a-z0-9]+$/);
 
     const downloadPromise = page.waitForEvent("download", { timeout: 10000 }).catch(() => null);
 
@@ -55,7 +55,7 @@ test.describe("Export", () => {
     if (!hasCampaigns) { test.skip(); return; }
 
     await firstLink.click();
-    await page.waitForURL(/\/campaigns\/[a-z0-9-]+$/);
+    await page.waitForURL(/\/campaigns\/detalhe\/?\?id=[a-z0-9]+$/);
 
     const downloadPromise = page.waitForEvent("download", { timeout: 10000 }).catch(() => null);
     await page.locator('button:has-text("JSON")').click();

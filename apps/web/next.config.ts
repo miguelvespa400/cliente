@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   ...(isStaticExport
     ? {
         output: "export",
+        // Pasta separada: não interfere no "next dev" (.next) rodando ao mesmo tempo.
+        distDir: "out",
         basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
         images: { unoptimized: true },
         trailingSlash: true,

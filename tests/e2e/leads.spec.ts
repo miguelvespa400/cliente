@@ -45,7 +45,7 @@ test.describe("Leads", () => {
     }
 
     await firstLeadLink.click();
-    await page.waitForURL(/\/leads\/[a-z0-9-]+$/);
+    await page.waitForURL(/\/leads\/detalhe\/?\?id=[a-z0-9]+$/);
     await expect(page.locator("h1, h2")).toBeVisible();
   });
 
@@ -57,7 +57,7 @@ test.describe("Leads", () => {
     if (!hasLeads) { test.skip(); return; }
 
     await firstLeadLink.click();
-    await page.waitForURL(/\/leads\/[a-z0-9-]+$/);
+    await page.waitForURL(/\/leads\/detalhe\/?\?id=[a-z0-9]+$/);
 
     // Find CRM status select/button and change it
     const crmSelect = page.locator('[id="crm-status"], button:has-text("Novo"), button:has-text("Contatado")').first();

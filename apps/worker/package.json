@@ -1,0 +1,21 @@
+{
+  "name": "@prospex/worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prospex no Cloudflare: API (Hono) + D1 + painel estático no mesmo Worker",
+  "scripts": {
+    "build:web": "node build-web.mjs",
+    "dev": "wrangler dev",
+    "deploy": "node build-web.mjs && wrangler deploy",
+    "db:migrate": "wrangler d1 migrations apply prospex-db --remote",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241205.0",
+    "typescript": "^5.6.3",
+    "wrangler": "^4.0.0"
+  }
+}

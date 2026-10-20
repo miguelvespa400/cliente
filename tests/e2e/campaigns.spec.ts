@@ -46,7 +46,7 @@ test.describe("Campaigns", () => {
     // Should redirect to campaign detail page. Excludes "/campaigns/new"
     // itself, which the bare `[a-z0-9-]+` pattern would otherwise match if
     // the form failed to submit and the page never actually navigated.
-    await page.waitForURL(/\/campaigns\/(?!new$)[a-z0-9-]+$/, { timeout: 15000 });
+    await page.waitForURL(/\/campaigns\/detalhe\/?\?id=[a-z0-9]+$/, { timeout: 15000 });
     await expect(page.getByText(CAMPAIGN.name)).toBeVisible();
 
     // Wait for campaign to complete (scraper uses mock fallback — should finish in < 30s)
@@ -63,7 +63,7 @@ test.describe("Campaigns", () => {
     // Click the campaign row/card. Excludes the ever-present "Nova campanha"
     // button, whose href ("/campaigns/new") would otherwise match first.
     await page.locator("a[href^='/campaigns/']:not([href='/campaigns/new'])").first().click();
-    await page.waitForURL(/\/campaigns\/(?!new$)[a-z0-9-]+$/);
+    await page.waitForURL(/\/campaigns\/detalhe\/?\?id=[a-z0-9]+$/);
 
     // Leads section should show at least 1 lead
     await expect(page.locator("text=/Leads \\(\\d+\\)/")).toBeVisible({ timeout: 10000 });

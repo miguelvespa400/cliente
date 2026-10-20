@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MessageCircle, Mail, Send, Webhook, Plug, ArrowRight, Zap, Loader2, CheckCircle2 } from "lucide-react";
+import { MessageCircle, Mail, Send, Webhook, Plug, ArrowRight, Zap, Loader2, CheckCircle2, MapPin } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 
@@ -29,8 +29,8 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
-type IntegrationId = "whatsapp" | "ses" | "gmail" | "telegram" | "webhook" | "zapier" | "n8n";
-type Configurable = "telegram" | "webhook" | "whatsapp" | "ses";
+type IntegrationId = "google_places" | "whatsapp" | "ses" | "gmail" | "telegram" | "webhook" | "zapier" | "n8n";
+type Configurable = "telegram" | "webhook" | "whatsapp" | "ses" | "google_places";
 
 interface StoredIntegration {
   type: string;
@@ -40,10 +40,11 @@ interface StoredIntegration {
 const EVENTS = [
   { id: "campaign.completed", label: "Campanha concluída (envia os leads)" },
   { id: "campaign.failed", label: "Campanha falhou" },
-  { id: "lead.status_changed", label: "Lead mudou de status no CRM" },
+  { id: "lead.status_changed", label: "Lead mudou de etapa no funil" },
+  { id: "tasks.daily_digest", label: "Resumo diário das tarefas (8h)" },
 ];
 
-const integrations: Array<{
+const allIntegrations: Array<{
   id: IntegrationId;
   name: string;
   description: string;
@@ -54,6 +55,16 @@ const integrations: Array<{
   // "builtin": já funciona sem configuração; senão, qual config salva ativa o card
   mode: "builtin" | Configurable;
 }> = [
+  {
+    id: "google_places",
+    name: "Google Maps (Places API)",
+    description: "Busca as empresas das campanhas pela API oficial do Google Maps, com telefone, site e avaliações. Necessária na versão online (Cloudflare).",
+    icon: MapPin,
+    color: "text-sky-500",
+    bg: "bg-sky-500/10",
+    category: "Busca de leads",
+    mode: "google_places",
+  },
   {
     id: "whatsapp",
     name: "WhatsApp Business",
@@ -126,7 +137,19 @@ const integrations: Array<{
   },
 ];
 
+// Google Maps (Places API) só existe na versão Cloudflare (apps/worker), que não tem o coletor
+// por navegador. No servidor próprio a busca é pelo Playwright e o card não faria nada.
+const integrations = allIntegrations.filter((i) => i.id !== "google_places" || process.env.NEXT_PUBLIC_PLACES_API === "true");
+
 const GUIDES: Record<IntegrationId, React.ReactNode> = {
+  google_places: (
+    <ol className="list-decimal pl-4 space-y-1">
+      <li>Em <b>console.cloud.google.com</b>, crie um projeto e ative o faturamento (o Google pede cartão, mas há cota mensal gratuita).</li>
+      <li>Em <b>APIs e serviços → Biblioteca</b>, ative a <b>Places API (New)</b>.</li>
+      <li>Em <b>Credenciais → Criar credenciais → Chave de API</b>, copie a chave e restrinja-a à <b>Places API (New)</b>.</li>
+      <li>Cerca de 1.000 buscas por mês (até 20 empresas cada) ficam dentro da cota gratuita.</li>
+    </ol>
+  ),
   whatsapp: (
     <ol className="list-decimal pl-4 space-y-1">
       <li>Em <b>developers.facebook.com</b>, crie um app do tipo <b>Empresa</b> e adicione o produto <b>WhatsApp</b>.</li>
@@ -191,6 +214,7 @@ export function IntegrationsPage() {
     const cfg = stored.find((s) => s.type === mode)?.config;
     if (mode === "whatsapp") return !!(cfg?.accessToken && cfg?.phoneNumberId);
     if (mode === "ses") return !!cfg?.fromEmail;
+    if (mode === "google_places") return !!cfg?.apiKey;
     return mode === "webhook" ? !!cfg?.url : !!(cfg?.botToken && cfg?.chatId);
   };
 
@@ -312,12 +336,13 @@ function IntegrationDialog({
   const [testing, setTesting] = useState(false);
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setCfg((p) => ({ ...p, [k]: e.target.value }));
 
-  // WhatsApp e SES não usam a lista de eventos: eles enviam mensagens, não recebem avisos.
-  const hasEvents = type !== "whatsapp" && type !== "ses";
+  // WhatsApp, SES e Google Maps não usam a lista de eventos: só Webhook e Telegram recebem avisos.
+  const hasEvents = type === "webhook" || type === "telegram";
   const valid =
     type === "webhook" ? /^https?:\/\/.+/i.test(cfg.url ?? "")
     : type === "telegram" ? !!(cfg.botToken && cfg.chatId)
     : type === "ses" ? /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cfg.fromEmail ?? "")
+    : type === "google_places" ? !!cfg.apiKey
     : !!(cfg.accessToken && cfg.phoneNumberId && cfg.templateName);
 
   const buildConfig = (): Record<string, string> => {
@@ -336,6 +361,7 @@ function IntegrationDialog({
         dailyLimit: cfg.dailyLimit || "50",
       };
     }
+    if (type === "google_places") return { apiKey: (cfg.apiKey ?? "").trim() };
     return {
       accessToken: cfg.accessToken ?? "",
       phoneNumberId: (cfg.phoneNumberId ?? "").trim(),
@@ -376,7 +402,7 @@ function IntegrationDialog({
         toast.success(`Conectado ao número ${r.phone} (${r.name})`);
         if (cfg.wabaId) setTemplates(await api.get<typeof templates>("/integrations/whatsapp/templates").catch(() => []));
       } else if (r.ok) {
-        toast.success(type === "telegram" ? "Mensagem de teste enviada ao Telegram" : `Teste entregue (HTTP ${r.status})`);
+        toast.success(type === "telegram" ? "Mensagem de teste enviada ao Telegram" : type === "google_places" ? "Chave do Google funcionando" : `Teste entregue (HTTP ${r.status})`);
       } else {
         toast.error(`O destino recusou o teste: ${r.error ?? `HTTP ${r.status}`}`);
       }
@@ -439,6 +465,13 @@ function IntegrationDialog({
                 <Input id="tg-chat" placeholder="Ex.: 123456789 ou -100... (grupo)" value={cfg.chatId ?? ""} onChange={set("chatId")} />
               </div>
             </>
+          )}
+
+          {type === "google_places" && (
+            <div className="space-y-1.5">
+              <Label htmlFor="gp-key">Chave de API do Google</Label>
+              <Input id="gp-key" type="password" placeholder="AIza..." value={cfg.apiKey ?? ""} onChange={set("apiKey")} />
+            </div>
           )}
 
           {type === "whatsapp" && (
@@ -575,14 +608,14 @@ function IntegrationDialog({
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2 flex-wrap">
-          {(initial.url || initial.botToken || initial.accessToken || initial.fromEmail) && (
+          {(initial.url || initial.botToken || initial.accessToken || initial.fromEmail || initial.apiKey) && (
             <Button variant="ghost" className="text-destructive sm:mr-auto" onClick={disconnect} disabled={saving || testing}>
               Desconectar
             </Button>
           )}
           <Button variant="outline" onClick={test} disabled={blocked}>
             {testing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-            {type === "whatsapp" || type === "ses" ? "Testar conexão" : "Enviar teste"}
+            {type === "whatsapp" || type === "ses" || type === "google_places" ? "Testar conexão" : "Enviar teste"}
           </Button>
           <Button variant="gradient" onClick={async () => { if (await save()) onClose(); }} disabled={blocked}>
             {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}Salvar

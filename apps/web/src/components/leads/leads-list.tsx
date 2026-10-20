@@ -4,7 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Download } from "lucide-react";
+import { Search, Download, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { LeadFormDialog } from "@/components/crm/lead-form-dialog";
 import { useLeads } from "@/hooks/use-leads";
 import { LeadsTable } from "./leads-table";
 import { api } from "@/lib/api";
@@ -14,6 +16,8 @@ export function LeadsList() {
   const [priority, setPriority] = useState("all");
   const [crmStatus, setCrmStatus] = useState("all");
   const [debouncedQ, setDebouncedQ] = useState("");
+  const [creating, setCreating] = useState(false);
+  const router = useRouter();
 
   const { leads, total, loading } = useLeads({
     q: debouncedQ || undefined,
@@ -57,6 +61,7 @@ export function LeadsList() {
             <SelectItem value="contacted">Contatado</SelectItem>
             <SelectItem value="replied">Respondeu</SelectItem>
             <SelectItem value="meeting">Reunião</SelectItem>
+            <SelectItem value="proposal">Proposta</SelectItem>
             <SelectItem value="won">Ganho</SelectItem>
             <SelectItem value="lost">Perdido</SelectItem>
           </SelectContent>
@@ -66,6 +71,9 @@ export function LeadsList() {
           <Button variant="outline" onClick={() => api.download("/export/leads/csv", "leads-all.csv")}>
             <Download className="mr-2 h-4 w-4" />Exportar CSV
           </Button>
+          <Button variant="gradient" onClick={() => setCreating(true)}>
+            <Plus className="h-4 w-4" />Novo lead
+          </Button>
         </div>
       </div>
 
@@ -74,6 +82,10 @@ export function LeadsList() {
           <LeadsTable leads={leads} loading={loading} />
         </CardContent>
       </Card>
+
+      {creating && (
+        <LeadFormDialog onClose={() => setCreating(false)} onSaved={(lead) => router.push(`/leads/detalhe?id=${lead.id}`)} />
+      )}
     </div>
   );
 }

@@ -11,14 +11,14 @@ export class ExportService {
     return this.prisma.lead.findMany({
       where: { workspaceId, ...(campaignId && { campaignId }) },
       orderBy: [{ priority: "asc" }, { score: "desc" }],
-      include: { campaign: { select: { name: true } } },
+      include: { campaign: { select: { name: true } }, owner: { select: { name: true } } },
     });
   }
 
   toCsv(leads: Awaited<ReturnType<typeof this.getLeads>>): string {
     const headers = [
-      "Nome", "Endereço", "Telefone", "Site", "Avaliação", "Nº de avaliações", "Pontuação", "Prioridade",
-      "Status no CRM", "Campanha", "Tem site", "Coletado em",
+      "Nome", "Contato", "Endereço", "Telefone", "E-mail", "Site", "Avaliação", "Nº de avaliações", "Pontuação", "Prioridade",
+      "Status no CRM", "Valor (R$)", "Responsável", "Campanha", "Tem site", "Coletado em",
     ];
     const priorityPt: Record<string, string> = { HIGH: "Alta", MEDIUM: "Média", LOW: "Baixa" };
     const crmStatusPt: Record<string, string> = {
@@ -30,9 +30,10 @@ export class ExportService {
         ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const rows = leads.map((l) => [
-      l.name, l.address, l.phone, l.website, l.rating, l.reviewCount, l.score,
+      l.name, l.contactName, l.address, l.phone, l.email, l.website, l.rating, l.reviewCount, l.score,
       priorityPt[l.priority] ?? l.priority, crmStatusPt[l.crmStatus] ?? l.crmStatus,
-      l.campaign?.name ?? "", l.hasWebsite ? "Sim" : "Não",
+      l.dealValue != null ? l.dealValue.toFixed(2).replace(".", ",") : "", l.owner?.name ?? "",
+      l.campaign?.name ?? (l.source === "manual" ? "Cadastro manual" : ""), l.hasWebsite ? "Sim" : "Não",
       new Date(l.scrapedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
     ].map(escape).join(","));
     return [headers.join(","), ...rows].join("\n");
@@ -53,6 +54,12 @@ export class ExportService {
       priority: l.priority,
       crmStatus: l.crmStatus,
       crmNotes: l.crmNotes,
+      contactName: l.contactName,
+      email: l.email,
+      dealValue: l.dealValue,
+      owner: l.owner?.name ?? null,
+      expectedCloseDate: l.expectedCloseDate,
+      source: l.source,
       hasWebsite: l.hasWebsite,
       campaign: l.campaign?.name,
       marketingContent: l.marketingContent,

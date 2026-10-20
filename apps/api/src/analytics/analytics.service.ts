@@ -17,8 +17,11 @@ export class AnalyticsService {
         by: ["crmStatus"],
         where: { workspaceId },
         _count: { crmStatus: true },
+        _sum: { dealValue: true },
       }),
     ]);
+    const valueOf = (pred: (status: string) => boolean) =>
+      crmStats.filter((s) => pred(s.crmStatus)).reduce((sum, s) => sum + (s._sum.dealValue ?? 0), 0);
 
     const won = crmStats.find((s) => s.crmStatus === "won")?._count.crmStatus ?? 0;
     const conversionRate = totalLeads > 0 ? ((won / totalLeads) * 100).toFixed(1) : "0";
@@ -28,9 +31,13 @@ export class AnalyticsService {
       activeCampaigns,
       conversionRate: `${conversionRate}%`,
       dealsWon: won,
+      // Soma dos valores dos negócios em aberto (fora de Ganho/Perdido) e dos ganhos.
+      pipelineValue: valueOf((s) => s !== "won" && s !== "lost"),
+      wonValue: valueOf((s) => s === "won"),
       crmPipeline: crmStats.map((s) => ({
         status: s.crmStatus,
         count: s._count.crmStatus,
+        value: s._sum.dealValue ?? 0,
       })),
     };
   }

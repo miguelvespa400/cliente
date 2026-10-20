@@ -1,0 +1,33 @@
+# Prospex no Cloudflare (conta Netwish — contato@netwish.com.br).
+# Um Worker só: /api/* é a API (src/index.ts); o resto é o painel estático (apps/web exportado).
+name = "prospex"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+account_id = "8d724c0b0854ab437e1b11ec37199e35"
+workers_dev = true
+
+[assets]
+directory = "../web/out"
+binding = "ASSETS"
+not_found_handling = "404-page"
+run_worker_first = ["/api/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "prospex-db"
+database_id = "f0a61c5e-1f42-40d2-b8ce-1bc3f3b0e193"
+migrations_dir = "migrations"
+
+[vars]
+# Cadastro fechado: o 1º usuário vira dono; outros só se o e-mail estiver aqui (separados por vírgula).
+REGISTRATION_ALLOWED_EMAILS = ""
+# Links do resumo diário das tarefas (Telegram/Webhook).
+APP_URL = "https://prospex.contato2021.workers.dev"
+
+# Segredos (definidos com `wrangler secret put`, nunca neste arquivo):
+#   JWT_SECRET      — assina as sessões
+#   ENCRYPTION_KEY  — AES-256-GCM (base64, 32 bytes) para as chaves de integração no banco
+
+# Lembrete diário das tarefas (Telegram/Webhook): 11:00 UTC = 08:00 em Brasília.
+[triggers]
+crons = ["0 11 * * *"]

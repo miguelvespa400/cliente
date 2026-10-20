@@ -16,6 +16,7 @@ import { ExportModule } from "./export/export.module";
 import { AuthModule } from "./auth/auth.module";
 import { WorkspaceModule } from "./workspace/workspace.module";
 import { EmailModule } from "./email/email.module";
+import { TasksModule } from "./tasks/tasks.module";
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { EmailModule } from "./email/email.module";
     AuthModule,
     WorkspaceModule,
     EmailModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [

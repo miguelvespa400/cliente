@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Megaphone, TrendingUp, Trophy, ArrowUpRight, ArrowRight, Loader2, Plus, Inbox } from "lucide-react";
+import { Users, Megaphone, TrendingUp, Trophy, ArrowUpRight, ArrowRight, Loader2, Plus, Inbox, KanbanSquare } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useCampaigns } from "@/hooks/use-campaigns";
 import { api } from "@/lib/api";
-import { formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 const container = {
   hidden: { opacity: 0 },
@@ -26,6 +26,8 @@ interface Overview {
   activeCampaigns: number;
   conversionRate: string;
   dealsWon: number;
+  pipelineValue?: number;
+  wonValue?: number;
 }
 
 export function DashboardOverview() {
@@ -41,7 +43,8 @@ export function DashboardOverview() {
     { title: "Total de leads", value: overview?.totalLeads.toLocaleString("pt-BR") ?? "—", icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
     { title: "Campanhas ativas", value: overview?.activeCampaigns.toString() ?? "—", icon: Megaphone, color: "text-purple-500", bg: "bg-purple-500/10" },
     { title: "Taxa de conversão", value: overview?.conversionRate ?? "—", icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { title: "Negócios ganhos", value: overview?.dealsWon.toString() ?? "—", icon: Trophy, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { title: "Em negociação", value: overview ? formatCurrency(overview.pipelineValue ?? 0, true) : "—", icon: KanbanSquare, color: "text-sky-500", bg: "bg-sky-500/10" },
+    { title: "Negócios ganhos", value: overview ? (overview.wonValue ? `${overview.dealsWon} · ${formatCurrency(overview.wonValue, true)}` : overview.dealsWon.toString()) : "—", icon: Trophy, color: "text-amber-500", bg: "bg-amber-500/10" },
   ];
 
   // Build trend from campaign data (campaigns per week by createdAt)
@@ -71,7 +74,7 @@ export function DashboardOverview() {
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
       >
         {stats.map((stat) => (
           <motion.div key={stat.title} variants={item}>
